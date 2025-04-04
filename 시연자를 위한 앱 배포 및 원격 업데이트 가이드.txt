@@ -1,0 +1,99 @@
+시연자를 위한 앱 배포 및 원격 업데이트 가이드
+1. EAS 계정 및 설정
+먼저 EAS 계정이 필요합니다:
+bash복사# Expo 계정 로그인
+npx eas login
+
+# 프로젝트 초기화
+npx eas build:configure
+2. eas.json 파일 설정
+프로젝트 루트에 eas.json 파일을 생성하거나 수정합니다:
+json복사{
+  "cli": {
+    "version": ">= 3.13.3"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview"
+    },
+    "demo": {
+      "distribution": "internal",
+      "channel": "demo",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {}
+  },
+  "submit": {
+    "production": {}
+  }
+}
+이 설정에서 "demo" 프로필은 시연자를 위한 특별 빌드입니다.
+3. app.json 업데이트
+업데이트를 사용하기 위해 app.json 파일에 다음 내용을 추가합니다:
+json복사{
+  "expo": {
+    // 기존 설정 유지
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/your-project-id"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}
+4. 시연용 앱 빌드
+bash복사# Android APK 빌드 (가장 배포하기 쉬운 형식)
+npx eas build --profile demo --platform android
+
+# iOS 빌드 (Apple 개발자 계정 필요)
+npx eas build --profile demo --platform ios
+빌드가 완료되면 Expo 대시보드(https://expo.dev)에서 빌드된 앱을 다운로드할 수 있는 링크를 얻을 수 있습니다.
+5. 시연자에게 앱 배포
+Android의 경우:
+
+빌드된 APK 파일을 다운로드
+이메일, 메신저, 또는 파일 공유 서비스를 통해 시연자에게 전송
+시연자는 APK 파일을 다운로드하고 설치하면 됩니다
+
+iOS의 경우:
+
+TestFlight를 통해 배포 (Apple 개발자 계정 필요)
+또는 Ad Hoc 배포를 위해 시연자의 기기 UDID를 등록하고 설치 프로파일 배포
+
+6. 원격 업데이트 배포
+앱을 수정한 후, 시연자의 앱을 업데이트하려면:
+bash복사# 데모 채널로 업데이트 배포
+npx eas update --branch demo --message "새로운 기능 추가 및 UI 개선"
+이 명령을 실행하면:
+
+최신 코드로 JavaScript 번들이 생성됩니다
+번들이 Expo 서버에 업로드됩니다
+시연자의 앱이 다음에 실행될 때 자동으로 최신 버전을 다운로드하고 적용합니다
+
+7. 실시간 피드백 확인
+EAS 대시보드에서 앱 사용 현황 및 오류 보고를 확인할 수 있습니다:
+
+앱 충돌 보고서
+JavaScript 오류 로그
+사용자 세션 정보
+
+장점 및 기능
+
+코드 서명: EAS가 자동으로 앱에 서명하므로 신뢰할 수 있는 소스에서 앱이 제공됩니다
+자동 업데이트: 시연자가 별도로 앱 스토어를 통해 업데이트할 필요 없이 자동으로 최신 버전을 받습니다
+롤백 가능: 문제가 발생하면 이전 버전으로 빠르게 롤백할 수 있습니다
+특정 사용자 타겟팅: 필요한 경우 특정 사용자에게만 업데이트를 제공할 수 있습니다
+
+이 방식을 사용하면 시연자는 항상 최신 버전의 앱을 사용할 수 있으며, 개발자는 원격으로 앱을 관리하고 업데이트할 수 있어 투자자 시연을 위한 최적의 환경을 제공할 수 있습니다.재시도Claude는 인터넷에 접속할 수 없습니다. 제공된 링크가 정확하지 않거나 최신 상태가 아닐 수 있습니다.Claude는 실수를 할 수 있습니다. 응답을 반드시 다시 확인해 주세요.

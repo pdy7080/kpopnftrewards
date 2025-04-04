@@ -1,0 +1,86 @@
+필요한 이미지 파일
+다음 이미지 파일들을 준비해 주세요:
+placeholder.png - NFT 이미지가 로드되지 않을 때 표시할 기본 이미지
+위치: src/assets/placeholder.png
+크기: 200x200px 이상 권장
+아티스트 이미지 - 이찬원 아티스트 이미지
+위치: src/assets/artists/chanwon/
+파일: logo.png, profile.jpg
+크기: 로고는 300x100px, 프로필은 500x500px 이상 권장
+NFT 프레임 이미지 - NFT 티어별 프레임
+위치: src/assets/frames/
+파일: fan.png, supporter.png, earlybird.png, founders.png
+크기: 300x300px 이상 권장
+아이콘 이미지 - 앱 내 사용할 아이콘
+위치: src/assets/icons/
+파일: qr-scan.png, nft.png, admin.png, fusion.png
+크기: 100x100px 이상 권장
+
+assets/
+├── animations/                    # 애니메이션 파일
+│   ├── fusion.json               # NFT 합성 애니메이션
+│   ├── success.json              # 성공 애니메이션
+│   └── loading.json              # 로딩 애니메이션
+│
+├── artists/                      # 아티스트 관련 이미지
+│   ├── gidle/                    # 여자아이들
+│   │   ├── logo.png              # 그룹 로고
+│   │   ├── group.jpg             # 그룹 사진
+│   │   └── members/              # 멤버 개별 사진
+│   │       ├── miyeon.jpg
+│   │       ├── minnie.jpg
+│   │       ├── soyeon.jpg
+│   │       ├── yuqi.jpg
+│   │       └── shuhua.jpg
+│   │
+│   ├── bibi/                     # 비비
+│   │   ├── logo.png              # 로고
+│   │   ├── profile.jpg           # 프로필 사진
+│   │   └── group.jpg             # 그룹 사진
+│   │
+│   └── chanwon/                  # 이찬원 (신규 추가)
+│       ├── logo.png              # 로고
+│       ├── profile.jpg           # 프로필 사진
+│       └── group.jpg             # 그룹 사진
+│
+├── benefits/                     # 혜택 관련 이미지
+│   ├── gidle/                    # 여자아이들 혜택
+│   │   ├── fansign.jpg           # 팬사인회 이미지
+│   │   ├── concert.jpg           # 콘서트 이미지
+│   │   └── fanmeeting.jpg        # 팬미팅 이미지
+│   │
+│   ├── bibi/                     # 비비 혜택
+│   │   ├── fansign.jpg           # 팬사인회 이미지
+│   │   ├── concert.jpg           # 콘서트 이미지
+│   │   └── fanmeeting.jpg        # 팬미팅 이미지
+│   │
+│   └── chanwon/                  # 이찬원 혜택 (신규 추가)
+│       ├── fansign.jpg           # 팬사인회 이미지
+│       ├── concert.jpg           # 콘서트 이미지
+│       └── fanmeeting.jpg        # 팬미팅 이미지
+│
+├── frames/                       # NFT 프레임 이미지
+│   ├── fan.png                   # Fan 티어 프레임
+│   ├── supporter.png             # Supporter 티어 프레임
+│   ├── earlybird.png             # Early Bird 티어 프레임
+│   └── founders.png              # Founders 티어 프레임
+│
+├── icons/                        # 앱 내 아이콘
+│   ├── qr-scan.png               # QR 스캔 아이콘
+│   ├── nft.png                   # NFT 아이콘
+│   ├── admin.png                 # 관리자 아이콘
+│   ├── fusion.png                # 합성 아이콘
+│   ├── home.png                  # 홈 아이콘
+│   ├── collection.png            # 컬렉션 아이콘
+│   └── benefits.png              # 혜택 아이콘
+│
+├── images/                       # 기타 이미지
+│   ├── placeholder.png           # 기본 이미지
+│   ├── avatar.png                # 기본 아바타
+│   └── logo.png                  # 앱 로고
+│
+└── tiers/                        # 티어 아이콘
+    ├── fan.png                   # Fan 티어 아이콘
+    ├── supporter.png             # Supporter 티어 아이콘
+    ├── earlybird.png             # Early Bird 티어 아이콘
+    └── founders.png              # Founders 티어 아이콘

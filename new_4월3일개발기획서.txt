@@ -1,0 +1,1839 @@
+주요 문제점:
+
+QR 코드 스캔 기능 오류: expo-camera 및 expo-barcode-scanner 의존성 문제로 NFT 등록 시 오류 발생
+NFT 합성 기능 오류: 3개의 NFT를 선택해야 하는데 1개만 선택 가능하여 합성 진행 불가
+아티스트 확장 필요: 현재 여자아이들, 비비만 구현되어 있음 (이찬원 추가 필요)
+관리자 모드 기능 과다: 핵심 기능만 구현된 간소화된 버전 필요
+NFT 가치 상승 시뮬레이션 기능 부족: 판매량-포인트 연동 및 합성 후 가치 시뮬레이션 강화 필요
+테스트 데이터 부족: 여자아이들 미연 중심으로 구현됨 (비비, 이찬원 테스트 데이터 필요)
+Expo와 React Native 혼합으로 인한 개발 혼선
+
+검토를 완료했습니다. 다음 지시를 주시면 진행하겠습니다.재시도P응 일단 우리는 개발기획을 할거야. 
+안정적으로 앱을 만들어야해. 그리고 깔끔하고 최대한 이미지파일을 활용해서 비쥬얼적으로 보이게 해야해. 초화면에 아티스트 로고 보여주고 선택하는 화면으로 할거야.
+그리고 테스트 데이터가 여자아이들  미연으로 되어 있는데, 비비, 이찬원 각각 테스트 데이터를 각각 구현해 주면 좋겠어
+그리고 주의사항 추가하면
+1. 엑스포와 리엑트 혼합되면서 오류가 많이 나왔어. 이거 주의|
+2. qr스캐너는 기능은 구현하돼 실제앱 빌드시에 활성화 하고 그전에는 테스트qr코드를 통해 테스트 및 시연준비를 할거야. 왜냐하면 빌드전에는 qr스캐너 모듈이 에러가 나
+3. assets폴더안에 이미지 파일 준비했어. 지식폴더에도 올려놨어. 그 구조와 파일명 사용해줘. 그래야 오류가 안나
+자 이제 이 모든 것을 반영한 개발기획 및 개발계획서를 작성해 보자편집K-POP NFT 리워드 에코시스템 개발 기획서
+1. 프로젝트 개요
+1.1 개발 목적
+K-POP NFT 리워드 에코시스템은 K-POP 아이돌 IP를 활용한 실물 굿즈와 NFT를 연계하는 혁신적인 팬 리워드 시스템입니다. 본 프로젝트는 투자자 시연을 위한 안정적이고 시각적으로 매력적인 앱을 개발하여 비즈니스 모델의 가치와 잠재력을 효과적으로 전달하는 것을 목표로 합니다.
+1.2 핵심 가치 제안
+
+판매량 연동 가치 상승: 굿즈 판매량 증가에 따라 NFT 포인트가 자동으로 상승하는 시스템
+선구매 보상: 초기 구매자에게 더 높은 티어와 더 빠른 포인트 성장률 제공
+NFT 합성 시스템: 동일 티어 NFT 3개를 합성하여 상위 티어로 업그레이드
+티어별 차등 혜택: 티어에 따라 차별화된 실질적 혜택 제공
+
+1.3 타겟 아티스트
+투자자 시연용 앱에서는 세 개의 아티스트를 구현합니다:
+
+여자아이들(G)I-DLE: 5인조 걸그룹 (미연, 민니, 소연, 우기, 슈화)
+비비(BIBI): 솔로 아티스트
+이찬원: 트로트 가수 (신규 추가)
+
+1.4 개발 접근 방식
+
+안정성 최우선: 기존 문제점 해결 및 안정적인 코드 베이스 구축
+시각적 임팩트: 이미지 자산을 최대한 활용한 시각적으로 매력적인 UI
+핵심 기능 집중: 비즈니스 모델의 핵심 가치를 보여주는 기능에 집중
+테스트 모드 강화: QR 스캐너 의존성 문제를 회피하는 테스트 모드 구현
+
+2. 문제점 분석 및 해결 방안
+2.1 QR 스캐너 모듈 오류
+문제점: Expo Camera 및 바코드 스캐너 모듈 의존성 문제로 인한 오류
+해결 방안:
+
+테스트 모드 강화: 미리 준비된 QR 코드 데이터를 선택할 수 있는 테스트 모드 구현
+빌드 시에만 활성화: 앱 빌드 시에만 실제 QR 스캐너 기능 활성화
+조건부 임포트: 환경에 따른 조건부 모듈 임포트로 개발 중 오류 방지
+
+2.2 NFT 합성 기능 오류
+문제점: 3개의 NFT를 선택해야 하나 1개만 선택 가능한 상태
+해결 방안:
+
+다중 선택 로직 재구현: 선택 상태를 배열로 관리하여 다중 선택 가능하게 수정
+선택 UI 개선: 선택된 NFT를 시각적으로 명확히 표시
+선택 상태 유효성 검사: 동일 티어의 NFT만 선택 가능하도록 제한
+
+2.3 아티스트 확장 필요
+문제점: 현재 여자아이들, 비비만 구현되어 있어 확장성 부족
+해결 방안:
+
+이찬원 아티스트 추가: 제공된 자산 구조에 맞추어 이찬원 아티스트 데이터 구현
+아티스트 데이터 구조화: 일관된 데이터 구조로 아티스트 정보 관리
+테마 차별화: 아티스트별 고유 테마 색상 및 디자인 적용
+
+2.4 관리자 모드 기능 과다
+문제점: 필요 이상의 관리자 기능으로 인한 복잡성
+해결 방안:
+
+핵심 기능 집중: 판매량 시뮬레이션, 테스트 데이터 생성, 데이터 초기화 기능만 구현
+간소화된 UI: 직관적이고 단순한 관리자 인터페이스 설계
+숨겨진 접근 방식: 로고 5번 탭 등의 숨겨진 방식으로 관리자 모드 접근
+
+2.5 테스트 데이터 부족
+문제점: 여자아이들 미연 중심의 제한된 테스트 데이터
+해결 방안:
+
+포괄적 테스트 데이터: 여자아이들, 비비, 이찬원 각각의 테스트 데이터 구현
+다양한 티어 데이터: 모든 티어(Fan, Supporter, Early Bird, Founders)의 NFT 데이터 구현
+QR 코드 데이터 다양화: 각 아티스트와 티어별 테스트 QR 코드 데이터 준비
+
+2.6 Expo와 React Native 혼합 문제
+문제점: 기술 스택 혼합으로 인한 호환성 문제 및 개발 혼선
+해결 방안:
+
+일관된 접근 방식: Expo 기반으로 통일하여 개발
+호환성 확인: 사용 라이브러리의 Expo 호환성 확인
+조건부 코드: 개발 환경과 빌드 환경에 따른 조건부 코드 구현
+
+3. 앱 구조 및 화면 설계
+3.1 폴더 구조
+복사src/
+├── assets/                     # 모든 정적 에셋 파일
+│   ├── animations/             # 애니메이션 JSON 파일
+│   ├── artists/                # 아티스트 이미지
+│   ├── benefits/               # 혜택 관련 이미지
+│   ├── frames/                 # NFT 프레임 이미지
+│   ├── icons/                  # 앱 내 아이콘
+│   ├── images/                 # 기타 이미지
+│   └── tiers/                  # 티어 아이콘
+│
+├── components/                 # 재사용 컴포넌트
+│   ├── common/                 # 공통 컴포넌트
+│   │   ├── SafeImage.js        # 안전한 이미지 로딩 컴포넌트
+│   │   ├── TierBadge.js        # 티어 뱃지 컴포넌트
+│   │   └── Header.js           # 헤더 컴포넌트
+│   │
+│   ├── nft/                    # NFT 관련 컴포넌트
+│   │   ├── NFTCard.js          # NFT 카드 컴포넌트
+│   │   └── NFTSelector.js      # NFT 선택 컴포넌트
+│   │
+│   └── benefits/               # 혜택 관련 컴포넌트
+│       ├── BenefitCard.js      # 혜택 카드 컴포넌트
+│       └── TierProgressBar.js  # 티어 진행 바 컴포넌트
+│
+├── constants/                  # 상수 정의
+│   ├── artists.js              # 아티스트 관련 상수
+│   ├── benefits.js             # 혜택 관련 상수
+│   ├── colors.js               # 색상 정의
+│   ├── tiers.js                # 티어 관련 상수
+│   └── testData.js             # 테스트 데이터 (QR 코드 등)
+│
+├── contexts/                   # Context API
+│   ├── AppContext.js           # 앱 전체 상태 관리
+│   ├── NFTContext.js           # NFT 관련 상태 관리
+│   └── UserContext.js          # 사용자 정보 관리
+│
+├── navigation/                 # 네비게이션 설정
+│   └── AppNavigator.js         # 앱 네비게이션 구조
+│
+├── screens/                    # 화면 컴포넌트
+│   ├── ArtistSelectionScreen.js # 아티스트 선택 화면
+│   ├── HomeScreen.js           # 홈 화면
+│   ├── NFTCollectionScreen.js  # NFT 컬렉션 화면
+│   ├── NFTFusionScreen.js      # NFT 합성 화면
+│   ├── QRScanScreen.js         # QR 스캔 화면
+│   ├── BenefitsScreen.js       # 혜택 화면
+│   ├── FansignApplicationScreen.js # 팬사인회 응모 화면
+│   └── admin/                  # 관리자 화면
+│       ├── AdminDashboardScreen.js # 관리자 대시보드
+│       └── SalesSimulationScreen.js # 판매량 시뮬레이션 화면
+│
+├── services/                   # 비즈니스 로직
+│   ├── nftService.js           # NFT 관련 로직
+│   ├── benefitService.js       # 혜택 관련 로직
+│   ├── pointsCalculator.js     # 포인트 계산 로직
+│   └── admin/                  # 관리자 서비스
+│       ├── resetService.js     # 데이터 초기화 서비스
+│       └── testDataService.js  # 테스트 데이터 생성 서비스
+│
+├── utils/                      # 유틸리티 함수
+│   ├── storage.js              # AsyncStorage 래퍼
+│   ├── imageUtils.js           # 이미지 처리 유틸리티
+│   └── validators.js           # 유효성 검사 함수
+│
+└── App.js                      # 앱 진입점
+3.2 주요 화면 설계
+3.2.1 아티스트 선택 화면 (ArtistSelectionScreen)
+
+세 아티스트(여자아이들, 비비, 이찬원) 로고 및 프로필 이미지 표시
+아티스트별 테마 색상 적용
+선택 시 시각적 피드백 제공
+"시작하기" 버튼으로 선택 확정
+
+3.2.2 홈 화면 (HomeScreen)
+
+선택한 아티스트 테마로 스타일링
+NFT 컬렉션 요약 정보 (보유 수, 최고 티어 등)
+QR 스캔, NFT 합성, 혜택 등 주요 기능 바로가기
+최근 활동 요약
+숨겨진 관리자 모드 접근 (로고 5번 탭)
+
+3.2.3 NFT 컬렉션 화면 (NFTCollectionScreen)
+
+아티스트/티어별 필터링 옵션
+그리드 뷰로 NFT 카드 표시
+각 NFT 카드에 티어 정보 및 포인트 표시
+NFT 세부 정보 모달
+NFT 합성 모드 전환 버튼
+
+3.2.4 NFT 합성 화면 (NFTFusionScreen)
+
+NFT 다중 선택 지원 (최대 3개)
+선택된 NFT 시각적 표시
+티어별 필터링 (동일 티어만 선택 가능)
+합성 진행 애니메이션
+결과 NFT 및 혜택 변화 정보 표시
+
+3.2.5 QR 스캔 화면 (QRScanScreen)
+
+카메라 뷰 (빌드 시에만 활성화)
+테스트 모드 토글 버튼
+테스트 QR 코드 선택 옵션 (아티스트/티어별 다양한 옵션)
+QR 코드 스캔 성공 시 애니메이션
+
+3.2.6 혜택 화면 (BenefitsScreen)
+
+티어별 혜택 비교 탭
+팬사인회, 콘서트 우선 예매, 독점 콘텐츠 등 혜택 카드
+현재 티어 하이라이트 및 다음 티어까지 남은 포인트 표시
+혜택 이용 버튼 및 남은 이용 횟수 표시
+
+3.2.7 팬사인회 응모 화면 (FansignApplicationScreen)
+
+응모 양식 (이름, 연락처, 선호 멤버 등)
+티어별 혜택 정보 (응모 횟수, 당첨 확률 등)
+응모 완료 및 차감 애니메이션
+남은 응모 횟수 표시
+
+3.2.8 관리자 대시보드 (AdminDashboardScreen)
+
+판매량 시뮬레이션 메뉴
+테스트 데이터 생성 기능
+데이터 초기화 기능
+사용자 모드로 돌아가기 버튼
+
+3.2.9 판매량 시뮬레이션 화면 (SalesSimulationScreen)
+
+NFT 선택 옵션
+판매량 입력 및 증가 버튼
+포인트 변화 애니메이션
+티어별 성장률 비교 차트
+비즈니스 인사이트 메시지
+
+4. 핵심 기능 상세 설계
+4.1 NFT 획득 및 QR 스캔
+4.1.1 테스트 QR 코드 데이터
+javascript복사// constants/testData.js
+export const TEST_QR_CODES = [
+  // 여자아이들
+  {
+    name: '여자아이들 미연 (Founders 티어)',
+    data: JSON.stringify({
+      artistId: 'gidle',
+      memberId: 'miyeon',
+      purchaseOrder: 42
+    })
+  },
+  {
+    name: '여자아이들 소연 (Early Bird 티어)',
+    data: JSON.stringify({
+      artistId: 'gidle',
+      memberId: 'soyeon',
+      purchaseOrder: 250
+    })
+  },
+  {
+    name: '여자아이들 우기 (Supporter 티어)',
+    data: JSON.stringify({
+      artistId: 'gidle',
+      memberId: 'yuqi',
+      purchaseOrder: 650
+    })
+  },
+  {
+    name: '여자아이들 슈화 (Fan 티어)',
+    data: JSON.stringify({
+      artistId: 'gidle',
+      memberId: 'shuhua',
+      purchaseOrder: 1500
+    })
+  },
+  
+  // 비비
+  {
+    name: '비비 (Founders 티어)',
+    data: JSON.stringify({
+      artistId: 'bibi',
+      memberId: 'bibi',
+      purchaseOrder: 35
+    })
+  },
+  {
+    name: '비비 (Early Bird 티어)',
+    data: JSON.stringify({
+      artistId: 'bibi',
+      memberId: 'bibi',
+      purchaseOrder: 320
+    })
+  },
+  {
+    name: '비비 (Supporter 티어)',
+    data: JSON.stringify({
+      artistId: 'bibi',
+      memberId: 'bibi',
+      purchaseOrder: 750
+    })
+  },
+  {
+    name: '비비 (Fan 티어)',
+    data: JSON.stringify({
+      artistId: 'bibi',
+      memberId: 'bibi',
+      purchaseOrder: 2000
+    })
+  },
+  
+  // 이찬원
+  {
+    name: '이찬원 (Founders 티어)',
+    data: JSON.stringify({
+      artistId: 'chanwon',
+      memberId: 'chanwon',
+      purchaseOrder: 55
+    })
+  },
+  {
+    name: '이찬원 (Early Bird 티어)',
+    data: JSON.stringify({
+      artistId: 'chanwon',
+      memberId: 'chanwon',
+      purchaseOrder: 280
+    })
+  },
+  {
+    name: '이찬원 (Supporter 티어)',
+    data: JSON.stringify({
+      artistId: 'chanwon',
+      memberId: 'chanwon',
+      purchaseOrder: 820
+    })
+  },
+  {
+    name: '이찬원 (Fan 티어)',
+    data: JSON.stringify({
+      artistId: 'chanwon',
+      memberId: 'chanwon',
+      purchaseOrder: 1800
+    })
+  }
+];
+4.1.2 QR 스캔 화면 구현
+javascript복사// screens/QRScanScreen.js
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TEST_QR_CODES } from '../constants/testData';
+import { createNFTFromQRData } from '../services/nftService';
+import { COLORS } from '../constants/colors';
+
+// 조건부 임포트로 개발 중 오류 방지
+const QRScannerComponent = process.env.NODE_ENV === 'production' 
+  ? require('../components/QRScannerComponent').default
+  : () => <Text style={styles.devModeText}>QR 스캐너는 빌드 시에만 사용 가능합니다</Text>;
+
+export const QRScanScreen = ({ navigation }) => {
+  const [isTestMode, setIsTestMode] = useState(true); // 기본값은 테스트 모드
+  
+  // QR 코드 데이터 처리
+  const handleQRData = async (data) => {
+    try {
+      // JSON 파싱 및 NFT 생성
+      const qrData = JSON.parse(data);
+      const nft = await createNFTFromQRData(qrData);
+      
+      // 성공 화면으로 이동
+      navigation.replace('NFTAcquisitionSuccess', { nft });
+    } catch (error) {
+      Alert.alert('오류', '유효하지 않은 QR 코드입니다. 다시 시도해주세요.');
+    }
+  };
+  
+  // 테스트 QR 코드 선택 처리
+  const handleTestQRSelect = (item) => {
+    handleQRData(item.data);
+  };
+  
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>QR 코드 스캔</Text>
+      
+      {/* 모드 전환 버튼 */}
+      <TouchableOpacity 
+        style={styles.modeToggleButton}
+        onPress={() => setIsTestMode(!isTestMode)}
+      >
+        <Text style={styles.modeToggleButtonText}>
+          {isTestMode ? '카메라 모드로 전환' : '테스트 모드로 전환'}
+        </Text>
+      </TouchableOpacity>
+      
+      {isTestMode ? (
+        // 테스트 모드 UI
+        <View style={styles.testModeContainer}>
+          <Text style={styles.testModeTitle}>테스트 QR 코드 선택</Text>
+          <Text style={styles.testModeDescription}>
+            테스트를 위한 가상 QR 코드를 선택하세요
+          </Text>
+          
+          <FlatList
+            data={TEST_QR_CODES}
+            keyExtractor={(item, index) => `qr-${index}`}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.testQRItem}
+                onPress={() => handleTestQRSelect(item)}
+              >
+                <Text style={styles.testQRName}>{item.name}</Text>
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={styles.testQRList}
+          />
+        </View>
+      ) : (
+        // 카메라 모드 UI (빌드 시에만 실제 작동)
+        <View style={styles.scannerContainer}>
+          <QRScannerComponent onScan={handleQRData} />
+          <View style={styles.scanOverlay}>
+            <View style={styles.scanArea} />
+          </View>
+          <Text style={styles.scanInstruction}>QR 코드를 스캔 영역에 맞추세요</Text>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  // 스타일 정의
+});
+4.2 NFT 합성 기능 개선
+4.2.1 다중 선택 로직 개선
+javascript복사// screens/NFTFusionScreen.js (주요 부분)
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { NFTCard } from '../components/nft/NFTCard';
+import { useNFTContext } from '../contexts/NFTContext';
+import { TIERS } from '../constants/tiers';
+
+export const NFTFusionScreen = () => {
+  const { userNFTs, fuseNFTs } = useNFTContext();
+  
+  // 선택된 NFT를 배열로 관리 (다중 선택)
+  const [selectedNFTs, setSelectedNFTs] = useState([]);
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [fusionState, setFusionState] = useState('select'); // 'select', 'fusing', 'result'
+  
+  // NFT 선택 처리
+  const handleSelectNFT = (nft) => {
+    // 이미 3개 선택됐으면 더 선택 불가
+    if (selectedNFTs.length >= 3) {
+      Alert.alert('알림', 'NFT는 최대 3개까지 선택할 수 있습니다.');
+      return;
+    }
+    
+    // 이미 선택된 NFT인지 확인
+    if (selectedNFTs.some(selected => selected.id === nft.id)) {
+      Alert.alert('알림', '이미 선택된 NFT입니다.');
+      return;
+    }
+    
+    // 첫 선택 시 티어 설정
+    if (selectedNFTs.length === 0) {
+      setSelectedTier(nft.tier);
+    } 
+    // 다른 티어의 NFT 선택 시 알림
+    else if (nft.tier !== selectedTier) {
+      Alert.alert('알림', '같은 티어의 NFT만 선택할 수 있습니다.');
+      return;
+    }
+    
+    // 선택된 NFT 추가
+    setSelectedNFTs([...selectedNFTs, nft]);
+  };
+  
+  // NFT 선택 취소
+  const handleDeselectNFT = (nftId) => {
+    setSelectedNFTs(selectedNFTs.filter(nft => nft.id !== nftId));
+    
+    // 모든 선택이 취소되면 선택된 티어도 초기화
+    if (selectedNFTs.length === 1) {
+      setSelectedTier(null);
+    }
+  };
+  
+  // 합성 가능 여부 확인
+  const canFuse = selectedNFTs.length === 3 && selectedTier;
+  
+  // 합성 시작
+  const handleStartFusion = async () => {
+    if (!canFuse) return;
+    
+    // 합성 진행 상태로 변경
+    setFusionState('fusing');
+    
+    try {
+      // NFT 합성 실행
+      const result = await fuseNFTs(selectedNFTs);
+      
+      // 성공 시 결과 화면으로 전환
+      if (result.success) {
+        setFusionResult(result.newNFT);
+        setFusionState('result');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      Alert.alert('합성 오류', error.message);
+      setFusionState('select');
+    }
+  };
+  
+  // 화면 렌더링 부분 (각 상태별 UI 구현)
+  // ...
+};
+4.2.2 NFT 카드 선택 상태 시각화
+javascript복사// components/nft/NFTCard.js
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeImage } from '../common/SafeImage';
+import { TIERS } from '../../constants/tiers';
+import { COLORS } from '../../constants/colors';
+
+export const NFTCard = ({ 
+  nft, 
+  onSelect, 
+  onDeselect, 
+  isSelected = false,
+  size = 'medium',
+  disabled = false
+}) => {
+  // 티어 정보
+  const tierInfo = TIERS[nft.tier];
+  
+  // 카드 크기 설정
+  const cardSize = {
+    small: { width: 100, height: 140 },
+    medium: { width: 140, height: 200 },
+    large: { width: 180, height: 250 }
+  }[size];
+  
+  // 선택 처리
+  const handlePress = () => {
+    if (disabled) return;
+    
+    if (isSelected) {
+      onDeselect && onDeselect(nft.id);
+    } else {
+      onSelect && onSelect(nft);
+    }
+  };
+  
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.container, 
+        cardSize,
+        isSelected && styles.selectedCard,
+        disabled && styles.disabledCard
+      ]}
+      onPress={handlePress}
+      disabled={disabled && !isSelected}
+    >
+      {/* 티어 프레임 */}
+      <SafeImage
+        source={require(`../../assets/frames/${nft.tier}-frame.png`)}
+        style={[styles.frame, cardSize]}
+        fallbackSource={require('../../assets/images/placeholder.png')}
+      />
+      
+      {/* 아티스트/멤버 이미지 */}
+      <SafeImage
+        source={require(`../../assets/artists/${nft.artistId}/members/${nft.memberId}.jpg`)}
+        style={styles.memberImage}
+        fallbackSource={require('../../assets/images/placeholder.png')}
+      />
+      
+      {/* 정보 영역 */}
+      <View style={[styles.infoContainer, { backgroundColor: tierInfo.color + '80' }]}>
+        <Text style={styles.tierName}>{tierInfo.displayName}</Text>
+        <Text style={styles.pointsText}>{nft.currentPoints.toFixed(1)} P</Text>
+      </View>
+      
+      {/* 선택 상태 오버레이 */}
+      {isSelected && (
+        <View style={styles.selectedOverlay}>
+          <Text style={styles.selectedText}>선택됨</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'relative',
+    borderRadius: 10,
+    overflow: 'hidden',
+    margin: 8,
+  },
+  frame: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    resizeMode: 'cover',
+  },
+  memberImage: {
+    width: '90%',
+    height: '90%',
+    alignSelf: 'center',
+    marginTop: '5%',
+    resizeMode: 'cover',
+    borderRadius: 8,
+  },
+  infoContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0재시도Claude가 메시지 길이 제한에 도달하여 응답을 일시 중지했습니다. '계속하기'를 입력하시면 대화를 이어갈 수 있습니다.P계속하기편집javascript복사 infoContainer: {
+   position: 'absolute',
+   bottom: 0,
+   left: 0,
+   right: 0,
+   padding: 8,
+   flexDirection: 'row',
+   justifyContent: 'space-between',
+   backgroundColor: 'rgba(0,0,0,0.6)',
+ },
+ tierName: {
+   color: 'white',
+   fontWeight: 'bold',
+   fontSize: 12,
+ },
+ pointsText: {
+   color: 'white',
+   fontSize: 12,
+ },
+ selectedOverlay: {
+   position: 'absolute',
+   top: 0,
+   left: 0,
+   right: 0,
+   bottom: 0,
+   backgroundColor: 'rgba(0,0,0,0.4)',
+   justifyContent: 'center',
+   alignItems: 'center',
+   borderWidth: 3,
+   borderColor: COLORS.primary,
+   borderRadius: 10,
+ },
+ selectedText: {
+   color: 'white',
+   backgroundColor: COLORS.primary,
+   paddingHorizontal: 10,
+   paddingVertical: 5,
+   borderRadius: 15,
+   fontWeight: 'bold',
+ },
+ disabledCard: {
+   opacity: 0.5,
+ }
+});
+4.3 아티스트 확장 (이찬원 추가)
+4.3.1 아티스트 데이터 구조화
+javascript복사// constants/artists.js
+export const ARTISTS = {
+  gidle: {
+    id: 'gidle',
+    name: '여자아이들',
+    description: '큐브 엔터테인먼트 소속의 5인조 걸그룹',
+    logo: require('../assets/artists/gidle/logo.png'),
+    groupImage: require('../assets/artists/gidle/group.jpg'),
+    primaryColor: '#1A237E', // 네이비 블루
+    secondaryColor: '#6A1B9A', // 퍼플
+    accentColor: '#FFD700', // 골드
+    members: [
+      { id: 'miyeon', name: '미연', image: require('../assets/artists/gidle/members/miyeon.jpg') },
+      { id: 'minnie', name: '민니', image: require('../assets/artists/gidle/members/minnie.jpg') },
+      { id: 'soyeon', name: '소연', image: require('../assets/artists/gidle/members/soyeon.jpg') },
+      { id: 'yuqi', name: '우기', image: require('../assets/artists/gidle/members/yuqi.jpg') },
+      { id: 'shuhua', name: '슈화', image: require('../assets/artists/gidle/members/shuhua.jpg') }
+    ]
+  },
+  bibi: {
+    id: 'bibi',
+    name: '비비',
+    description: '매력적인 보컬과 독특한 음악 스타일의 솔로 아티스트',
+    logo: require('../assets/artists/bibi/logo.png'),
+    groupImage: require('../assets/artists/bibi/profile.jpg'),
+    primaryColor: '#D32F2F', // 레드
+    secondaryColor: '#212121', // 블랙
+    accentColor: '#FFC107', // 골드
+    members: [
+      { id: 'bibi', name: '비비', image: require('../assets/artists/bibi/profile.jpg') }
+    ]
+  },
+  chanwon: {
+    id: 'chanwon',
+    name: '이찬원',
+    description: '감성적인 목소리와 친근한 매력의 트로트 가수',
+    logo: require('../assets/artists/chanwon/logo.png'),
+    groupImage: require('../assets/artists/chanwon/profile.jpg'),
+    primaryColor: '#004D40', // 딥 그린
+    secondaryColor: '#37474F', // 다크 블루그레이
+    accentColor: '#FFB300', // 앰버
+    members: [
+      { id: 'chanwon', name: '이찬원', image: require('../assets/artists/chanwon/profile.jpg') }
+    ]
+  }
+};
+4.3.2 아티스트 선택 화면 구현
+javascript복사// screens/ArtistSelectionScreen.js
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ARTISTS } from '../constants/artists';
+import { COLORS } from '../constants/colors';
+import { setSelectedArtist } from '../utils/storage';
+
+export const ArtistSelectionScreen = ({ navigation }) => {
+  const [selectedArtistId, setSelectedArtistId] = useState(null);
+  
+  // 아티스트 선택 처리
+  const handleSelectArtist = (artistId) => {
+    setSelectedArtistId(artistId);
+  };
+  
+  // 시작하기 버튼 처리
+  const handleStart = async () => {
+    if (!selectedArtistId) return;
+    
+    // 선택한 아티스트 저장
+    await setSelectedArtist(selectedArtistId);
+    
+    // 홈 화면으로 이동
+    navigation.replace('Home');
+  };
+  
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>K-POP NFT 리워드</Text>
+        <Text style={styles.subtitle}>아티스트를 선택하세요</Text>
+      </View>
+      
+      <ScrollView contentContainerStyle={styles.artistList}>
+        {Object.values(ARTISTS).map((artist) => (
+          <TouchableOpacity
+            key={artist.id}
+            style={[
+              styles.artistCard,
+              selectedArtistId === artist.id && {
+                borderColor: artist.primaryColor,
+                backgroundColor: artist.primaryColor + '10',
+              }
+            ]}
+            onPress={() => handleSelectArtist(artist.id)}
+          >
+            <Image source={artist.logo} style={styles.artistLogo} />
+            <Image source={artist.groupImage} style={styles.artistImage} />
+            <Text style={styles.artistName}>{artist.name}</Text>
+            <Text style={styles.artistDescription}>{artist.description}</Text>
+            
+            {selectedArtistId === artist.id && (
+              <View style={[styles.selectedBadge, { backgroundColor: artist.primaryColor }]}>
+                <Text style={styles.selectedText}>선택됨</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      
+      <TouchableOpacity
+        style={[
+          styles.startButton,
+          selectedArtistId ? { backgroundColor: COLORS.primary } : styles.disabledButton
+        ]}
+        onPress={handleStart}
+        disabled={!selectedArtistId}
+      >
+        <Text style={styles.startButtonText}>시작하기</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
+  },
+  header: {
+    alignItems: 'center',
+    padding: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+  },
+  artistList: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  artistCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#eee',
+    alignItems: 'center',
+  },
+  artistLogo: {
+    height: 50,
+    width: '70%',
+    resizeMode: 'contain',
+    marginBottom: 16,
+  },
+  artistImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 8,
+    marginBottom: 16,
+    resizeMode: 'cover',
+  },
+  artistName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  artistDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  selectedBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  selectedText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  startButton: {
+    position: 'absolute',
+    bottom: 24,
+    left: 24,
+    right: 24,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  startButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  }
+});
+4.4 판매량-포인트 시뮬레이션 기능
+4.4.1 포인트 계산 로직
+javascript복사// services/pointsCalculator.js
+import { TIERS } from '../constants/tiers';
+
+/**
+ * 판매량에 따른 NFT 포인트 계산
+ * 
+ * @param {string} tier - NFT 티어 ('fan', 'supporter', 'earlybird', 'founders')
+ * @param {number} initialSales - 구매 순번 (초기 판매량)
+ * @param {number} currentSales - 현재 판매량
+ * @returns {number} 계산된 포인트
+ */
+export const calculatePoints = (tier, initialSales, currentSales) => {
+  // 티어 설정 가져오기
+  const tierConfig = TIERS[tier.toLowerCase()] || TIERS.fan;
+  
+  // 초기 포인트
+  const initialPoints = tierConfig.initialPoints;
+  
+  // 판매량 증가분 계산
+  const salesIncrease = Math.max(0, currentSales - initialSales);
+  
+  // 마일스톤 횟수 계산
+  const milestoneSize = tier === 'fan' ? 500 : 100;
+  const milestoneCount = Math.floor(salesIncrease / milestoneSize);
+  
+  // 티어별 포인트 증가율
+  const pointsPerMilestone = 
+    tier === 'founders' ? 3 :
+    tier === 'earlybird' ? 2 :
+    1;
+  
+  // 추가 포인트 계산
+  const additionalPoints = milestoneCount * pointsPerMilestone;
+  
+  // 최종 포인트 반환 (소수점 한 자리까지)
+  return Math.round((initialPoints + additionalPoints) * 10) / 10;
+};
+
+/**
+ * 구매 순서에 따른 티어 결정
+ * 
+ * @param {number} purchaseOrder - 구매 순번
+ * @returns {string} 티어 ID
+ */
+export const getTierByPurchaseOrder = (purchaseOrder) => {
+  if (purchaseOrder <= 100) return 'founders';
+  if (purchaseOrder <= 500) return 'earlybird';
+  if (purchaseOrder <= 1000) return 'supporter';
+  return 'fan';
+};
+4.4.2 시뮬레이션 화면 구현
+javascript복사// screens/admin/SalesSimulationScreen.js
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  View, Text, StyleSheet, TouchableOpacity, TextInput, 
+  ScrollView, Animated, FlatList 
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LineChart } from 'react-native-chart-kit';
+import { NFTCard } from '../../components/nft/NFTCard';
+import { calculatePoints } from '../../services/pointsCalculator';
+import { TIERS } from '../../constants/tiers';
+import { COLORS } from '../../constants/colors';
+import { useNFTContext } from '../../contexts/NFTContext';
+
+export const SalesSimulationScreen = ({ navigation }) => {
+  const { userNFTs } = useNFTContext();
+  
+  // 선택된 NFT와 관련 상태
+  const [selectedNFT, setSelectedNFT] = useState(null);
+  const [showNFTSelector, setShowNFTSelector] = useState(false);
+  
+  // 판매량 입력 및 결과
+  const [salesInput, setSalesInput] = useState('');
+  const [simulationResult, setSimulationResult] = useState(null);
+  
+  // 포인트 애니메이션 값
+  const pointsAnim = useRef(new Animated.Value(0)).current;
+  
+  // 티어별 비교 데이터
+  const [tierComparisonData, setTierComparisonData] = useState([]);
+  
+  // 컴포넌트 마운트 시 첫 번째 NFT 선택
+  useEffect(() => {
+    if (userNFTs.length > 0 && !selectedNFT) {
+      setSelectedNFT(userNFTs[0]);
+      setSalesInput(userNFTs[0].currentSales.toString());
+    }
+  }, [userNFTs]);
+  
+  // NFT 선택 처리
+  const handleSelectNFT = (nft) => {
+    setSelectedNFT(nft);
+    setSalesInput(nft.currentSales.toString());
+    setSimulationResult(null);
+    setShowNFTSelector(false);
+    
+    // 포인트 애니메이션 리셋
+    pointsAnim.setValue(nft.currentPoints);
+  };
+  
+  // 판매량 입력 처리
+  const handleSalesInputChange = (text) => {
+    // 숫자만 입력 가능
+    if (/^\d*$/.test(text)) {
+      setSalesInput(text);
+    }
+  };
+  
+  // 판매량 증가 버튼 처리
+  const handleSalesIncrement = (amount) => {
+    const currentSales = parseInt(salesInput) || (selectedNFT?.currentSales || 0);
+    setSalesInput((currentSales + amount).toString());
+  };
+  
+  // 시뮬레이션 실행
+  const runSimulation = () => {
+    if (!selectedNFT) return;
+    
+    const newSales = parseInt(salesInput) || selectedNFT.currentSales;
+    
+    // 현재 포인트
+    const currentPoints = selectedNFT.currentPoints;
+    
+    // 새 포인트 계산
+    const newPoints = calculatePoints(
+      selectedNFT.tier,
+      selectedNFT.initialSales,
+      newSales
+    );
+    
+    // 포인트 애니메이션
+    Animated.timing(pointsAnim, {
+      toValue: newPoints,
+      duration: 1500,
+      useNativeDriver: false
+    }).start();
+    
+    // 티어별 비교 데이터 생성
+    const comparisonData = Object.keys(TIERS).map(tier => {
+      const points = calculatePoints(tier, selectedNFT.initialSales, newSales);
+      return {
+        tier,
+        name: TIERS[tier].displayName,
+        points,
+        color: TIERS[tier].color,
+        isSelected: tier === selectedNFT.tier
+      };
+    });
+    
+    setTierComparisonData(comparisonData);
+    
+    // 시뮬레이션 결과 설정
+    setSimulationResult({
+      initialSales: selectedNFT.currentSales,
+      newSales,
+      initialPoints: currentPoints,
+      newPoints,
+      pointsIncrease: newPoints - currentPoints
+    });
+  };
+  
+  // NFT 선택기 렌더링
+  const renderNFTSelector = () => (
+    <View style={styles.selectorOverlay}>
+      <View style={styles.selectorContainer}>
+        <Text style={styles.selectorTitle}>NFT 선택</Text>
+        
+        <FlatList
+          data={userNFTs}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.nftSelectItem}
+              onPress={() => handleSelectNFT(item)}
+            >
+              <NFTCard nft={item} size="small" />
+              <View style={styles.nftInfo}>
+                <Text style={styles.nftName}>
+                  {item.artistId === 'gidle' ? '여자아이들' : 
+                   item.artistId === 'bibi' ? '비비' : '이찬원'}
+                  {' - '}
+                  {item.memberId}
+                </Text>
+                <Text style={styles.nftTier}>
+                  {TIERS[item.tier].displayName} 티어
+                </Text>
+                <Text style={styles.nftDetail}>
+                  구매 순번: {item.initialSales}번
+                </Text>
+                <Text style={styles.nftDetail}>
+                  현재 포인트: {item.currentPoints.toFixed(1)}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={styles.nftSelectorList}
+        />
+        
+        <TouchableOpacity 
+          style={styles.closeButton}
+          onPress={() => setShowNFTSelector(false)}
+        >
+          <Text style={styles.closeButtonText}>닫기</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+  
+  if (!selectedNFT) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.title}>판매량-포인트 시뮬레이션</Text>
+        <Text style={styles.noNFTMessage}>시뮬레이션할 NFT가 없습니다.</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>뒤로 가기</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+  
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>판매량-포인트 시뮬레이션</Text>
+      
+      <ScrollView style={styles.scrollContainer}>
+        {/* 선택된 NFT 정보 */}
+        <View style={styles.nftInfoContainer}>
+          <NFTCard nft={selectedNFT} size="medium" />
+          
+          <View style={styles.nftDetails}>
+            <Text style={styles.nftTitle}>
+              {selectedNFT.artistId === 'gidle' ? '여자아이들' : 
+               selectedNFT.artistId === 'bibi' ? '비비' : '이찬원'}
+              {' - '}
+              {selectedNFT.memberId}
+            </Text>
+            <Text style={styles.nftTierText}>
+              {TIERS[selectedNFT.tier].displayName} 티어
+            </Text>
+            <Text style={styles.nftOrderText}>
+              구매 순번: {selectedNFT.initialSales}번
+            </Text>
+            <View style={styles.pointsContainer}>
+              <Text style={styles.pointsLabel}>현재 포인트:</Text>
+              <Animated.Text style={styles.pointsValue}>
+                {pointsAnim.interpolate({
+                  inputRange: [
+                    Math.min(selectedNFT.currentPoints, simulationResult?.newPoints || selectedNFT.currentPoints),
+                    Math.max(selectedNFT.currentPoints, simulationResult?.newPoints || selectedNFT.currentPoints)
+                  ],
+                  outputRange: [
+                    Math.min(selectedNFT.currentPoints, simulationResult?.newPoints || selectedNFT.currentPoints).toFixed(1),
+                    Math.max(selectedNFT.currentPoints, simulationResult?.newPoints || selectedNFT.currentPoints).toFixed(1)
+                  ]
+                })}
+              </Animated.Text>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.changeNFTButton}
+              onPress={() => setShowNFTSelector(true)}
+            >
+              <Text style={styles.changeNFTButtonText}>NFT 변경</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* 판매량 시뮬레이션 컨트롤 */}
+        <View style={styles.simulationControls}>
+          <Text style={styles.sectionTitle}>판매량 설정</Text>
+          
+          <View style={styles.salesInputContainer}>
+            <Text style={styles.salesInputLabel}>판매량:</Text>
+            <TextInput
+              style={styles.salesInput}
+              value={salesInput}
+              onChangeText={handleSalesInputChange}
+              keyboardType="numeric"
+              placeholder="판매량 입력"
+            />
+            <Text style={styles.salesInputUnit}>개</Text>
+          </View>
+          
+          <View style={styles.incrementButtonsContainer}>
+            <TouchableOpacity
+              style={styles.incrementButton}
+              onPress={() => handleSalesIncrement(1000)}
+            >
+              <Text style={styles.incrementButtonText}>+1,000</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.incrementButton}
+              onPress={() => handleSalesIncrement(5000)}
+            >
+              <Text style={styles.incrementButtonText}>+5,000</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.incrementButton}
+              onPress={() => handleSalesIncrement(10000)}
+            >
+              <Text style={styles.incrementButtonText}>+10,000</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity
+            style={styles.simulateButton}
+            onPress={runSimulation}
+          >
+            <Text style={styles.simulateButtonText}>시뮬레이션 실행</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* 시뮬레이션 결과 */}
+        {simulationResult && (
+          <View style={styles.resultContainer}>
+            <Text style={styles.sectionTitle}>시뮬레이션 결과</Text>
+            
+            <View style={styles.resultCard}>
+              <View style={styles.resultItem}>
+                <Text style={styles.resultLabel}>판매량 변화:</Text>
+                <Text style={styles.resultValue}>
+                  {simulationResult.initialSales.toLocaleString()} → {simulationResult.newSales.toLocaleString()}개
+                </Text>
+              </View>
+              
+              <View style={styles.resultItem}>
+                <Text style={styles.resultLabel}>포인트 변화:</Text>
+                <Text style={styles.resultValue}>
+                  {simulationResult.initialPoints.toFixed(1)} → {simulationResult.newPoints.toFixed(1)}
+                  <Text style={styles.pointsIncrease}>
+                    {` (+${simulationResult.pointsIncrease.toFixed(1)})`}
+                  </Text>
+                </Text>
+              </View>
+              
+              <View style={styles.resultItem}>
+                <Text style={styles.resultLabel}>성장률:</Text>
+                <Text style={styles.resultValue}>
+                  {((simulationResult.pointsIncrease / simulationResult.initialPoints) * 100).toFixed(1)}%
+                </Text>
+              </View>
+            </View>
+            
+            {/* 티어별 비교 테이블 */}
+            <Text style={styles.tableTitle}>티어별 포인트 비교</Text>
+            <View style={styles.tableContainer}>
+              <View style={styles.tableHeader}>
+                <Text style={styles.tableHeaderCell}>티어</Text>
+                <Text style={styles.tableHeaderCell}>포인트</Text>
+                <Text style={styles.tableHeaderCell}>성장률</Text>
+              </View>
+              
+              {tierComparisonData.map(item => (
+                <View 
+                  key={item.tier}
+                  style={[
+                    styles.tableRow,
+                    item.isSelected && { backgroundColor: item.color + '20' }
+                  ]}
+                >
+                  <Text style={[
+                    styles.tableCell,
+                    item.isSelected && { fontWeight: 'bold' }
+                  ]}>
+                    {item.name}
+                  </Text>
+                  <Text style={[
+                    styles.tableCell,
+                    item.isSelected && { fontWeight: 'bold' }
+                  ]}>
+                    {item.points.toFixed(1)}
+                  </Text>
+                  <Text style={[
+                    styles.tableCell,
+                    item.isSelected && { fontWeight: 'bold' }
+                  ]}>
+                    {((item.points - calculatePoints(
+                      item.tier, 
+                      selectedNFT.initialSales, 
+                      selectedNFT.currentSales
+                    )) / calculatePoints(
+                      item.tier, 
+                      selectedNFT.initialSales, 
+                      selectedNFT.currentSales
+                    ) * 100).toFixed(1)}%
+                  </Text>
+                </View>
+              ))}
+            </View>
+            
+            {/* 비즈니스 인사이트 */}
+            <View style={styles.insightsContainer}>
+              <Text style={styles.insightsTitle}>비즈니스 인사이트</Text>
+              
+              <View style={styles.insightItem}>
+                <Text style={styles.insightHeader}>초기 구매자 보상</Text>
+                <Text style={styles.insightText}>
+                  Founders 티어(1~100번)는 일반 Fan 티어(1000번 이후)보다 
+                  동일한 판매량 증가에도 최대 15배 높은 포인트 성장률을 가집니다.
+                </Text>
+              </View>
+              
+              <View style={styles.insightItem}>
+                <Text style={styles.insightHeader}>자발적 홍보 유도</Text>
+                <Text style={styles.insightText}>
+                  NFT 가치가 판매량과 연동되어 자동 상승함으로써, 
+                  팬들이 자발적으로 굿즈를 홍보하도록 동기를 부여합니다.
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+      
+      {/* NFT 선택 모달 */}
+      {showNFTSelector && renderNFTSelector()}
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  // 스타일 정의
+});
+4.5 테스트 데이터 생성 기능
+4.5.1 테스트 데이터 생성 서비스
+javascript복사// services/admin/testDataService.js
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ARTISTS } from '../../constants/artists';
+import { TIERS } from '../../constants/tiers';
+import { calculatePoints, getTierByPurchaseOrder } from '../pointsCalculator';
+
+/**
+ * 테스트 NFT 데이터 생성
+ */
+export const generateTestData = async () => {
+  try {
+    const userId = 'user123'; // 시연용 고정 사용자 ID
+    
+    // NFT 데이터 생성
+    const nfts = [];
+    
+    // 각 아티스트별로 다양한 티어의 NFT 생성
+    Object.values(ARTISTS).forEach(artist => {
+      // 아티스트별 멤버 목록
+      const members = artist.members;
+      
+      // 티어별 NFT 개수 설정
+      const tierCounts = {
+        founders: 1, // 각 아티스트마다 Founders 티어 1개씩
+        earlybird: 2, // Early Bird 티어 2개씩
+        supporter: 3, // Supporter 티어 3개씩
+        fan: 3, // Fan 티어 3개씩
+      };
+      
+      // 각 티어별로 NFT 생성
+      Object.entries(tierCounts).forEach(([tier, count]) => {
+        for (let i = 0; i < count; i++) {
+          // 랜덤 멤버 선택
+          const member = members[Math.floor(Math.random() * members.length)];
+          
+          // 티어별 구매 순번 범위 설정
+          let purchaseOrderMin, purchaseOrderMax;
+          switch (tier) {
+            case 'founders':
+              purchaseOrderMin = 1;
+              purchaseOrderMax = 100;
+              break;
+            case 'earlybird':
+              purchaseOrderMin = 101;
+              purchaseOrderMax = 500;
+              break;
+            case 'supporter':
+              purchaseOrderMin = 501;
+              purchaseOrderMax = 1000;
+              break;
+            default: // fan
+              purchaseOrderMin = 1001;
+              purchaseOrderMax = 5000;
+              break;
+          }
+          
+          // 랜덤 구매 순번 생성
+          const purchaseOrder = Math.floor(
+            Math.random() * (purchaseOrderMax - purchaseOrderMin + 1)
+          ) + purchaseOrderMin;
+          
+          // 현재 판매량 설정 (구매 순번 + 랜덤 추가 판매량)
+          const additionalSales = Math.floor(Math.random() * 10000);
+          const currentSales = purchaseOrder + additionalSales;
+          
+          // 포인트 계산
+          const currentPoints = calculatePoints(tier, purchaseOrder, currentSales);
+          
+          // NFT 객체 생성
+          nfts.push({
+            id: `test_${artist.id}_${tier}_${i}_${Date.now()}`,
+            artistId: artist.id,
+            memberId: member.id,재시도Claude가 메시지 길이 제한에 도달하여 응답을 일시 중지했습니다. '계속하기'를 입력하시면 대화를 이어갈 수 있습니다.P계속하기편집javascript복사           id: `test_${artist.id}_${tier}_${i}_${Date.now()}`,
+           artistId: artist.id,
+           memberId: member.id,
+           name: `${artist.name} ${member.name} NFT`,
+           tier,
+           initialPoints: TIERS[tier].initialPoints,
+           currentPoints,
+           initialSales: purchaseOrder,
+           currentSales,
+           createdAt: new Date().toISOString(),
+           canFuse: true
+         });
+       }
+     });
+   });
+   
+   // NFT 저장
+   await AsyncStorage.setItem(`user_nfts_${userId}`, JSON.stringify(nfts));
+   
+   // 혜택 사용 내역 생성
+   const benefitUsage = {
+     // 여자아이들 팬사인회
+     'gidle_fansign_1': {
+       usedCount: 2,
+       maxUses: 5,
+       remainingUses: 3,
+       lastUsedAt: new Date().toISOString()
+     },
+     
+     // 비비 팬사인회
+     'bibi_fansign_1': {
+       usedCount: 1,
+       maxUses: 5,
+       remainingUses: 4,
+       lastUsedAt: new Date().toISOString()
+     },
+     
+     // 이찬원 팬사인회
+     'chanwon_fansign_1': {
+       usedCount: 0,
+       maxUses: 5,
+       remainingUses: 5,
+       lastUsedAt: null
+     }
+   };
+   
+   await AsyncStorage.setItem(`benefit_usage_${userId}`, JSON.stringify(benefitUsage));
+   
+   // 활동 내역 생성
+   const activities = [
+     {
+       id: `activity_1_${Date.now()}`,
+       type: 'nft_acquisition',
+       date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+       title: 'NFT 획득',
+       detail: `여자아이들 미연 NFT (${TIERS.founders.displayName} 티어)`
+     },
+     {
+       id: `activity_2_${Date.now()}`,
+       type: 'benefit_use',
+       date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+       title: '팬사인회 응모',
+       detail: '여자아이들 팬사인회 응모 완료'
+     },
+     {
+       id: `activity_3_${Date.now()}`,
+       type: 'nft_fusion',
+       date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+       title: 'NFT 합성',
+       detail: `Fan 티어 NFT 3개 → ${TIERS.supporter.displayName} 티어 NFT 1개`
+     }
+   ];
+   
+   await AsyncStorage.setItem(`user_activities_${userId}`, JSON.stringify(activities));
+   
+   return { success: true };
+ } catch (error) {
+   console.error('테스트 데이터 생성 오류:', error);
+   return { success: false, error: error.message };
+ }
+};
+
+/**
+* 앱 데이터 초기화
+*/
+export const resetAppData = async () => {
+ try {
+   // 초기화할 키 패턴 목록
+   const keysToRemove = [
+     'user_nfts_',
+     'benefit_usage_',
+     'user_activities_',
+     'fusion_history'
+   ];
+   
+   // 모든 스토리지 키 가져오기
+   const keys = await AsyncStorage.getAllKeys();
+   
+   // 패턴과 일치하는 키만 필터링
+   const keysToDelete = keys.filter(key => 
+     keysToRemove.some(pattern => key.includes(pattern))
+   );
+   
+   // 키 삭제
+   if (keysToDelete.length > 0) {
+     await AsyncStorage.multiRemove(keysToDelete);
+   }
+   
+   return { success: true };
+ } catch (error) {
+   console.error('데이터 초기화 오류:', error);
+   return { success: false, error: error.message };
+ }
+};
+4.5.2 관리자 대시보드 구현
+javascript복사// screens/admin/AdminDashboardScreen.js
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { generateTestData, resetAppData } from '../../services/admin/testDataService';
+import { COLORS } from '../../constants/colors';
+
+export const AdminDashboardScreen = ({ navigation }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // 테스트 데이터 생성 처리
+  const handleGenerateTestData = async () => {
+    setIsLoading(true);
+    
+    try {
+      const result = await generateTestData();
+      
+      if (result.success) {
+        Alert.alert('성공', '테스트 데이터가 생성되었습니다.');
+      } else {
+        throw new Error(result.error || '데이터 생성 실패');
+      }
+    } catch (error) {
+      Alert.alert('오류', `테스트 데이터 생성 중 오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // 앱 데이터 초기화 처리
+  const handleResetData = () => {
+    Alert.alert(
+      '데이터 초기화',
+      '모든 NFT와 사용 내역이 삭제됩니다. 계속하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '초기화',
+          style: 'destructive',
+          onPress: async () => {
+            setIsLoading(true);
+            
+            try {
+              const result = await resetAppData();
+              
+              if (result.success) {
+                Alert.alert('성공', '모든 데이터가 초기화되었습니다.');
+              } else {
+                throw new Error(result.error || '데이터 초기화 실패');
+              }
+            } catch (error) {
+              Alert.alert('오류', `데이터 초기화 중 오류가 발생했습니다: ${error.message}`);
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+  
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>관리자 모드</Text>
+      
+      <View style={styles.menuContainer}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('SalesSimulation')}
+          disabled={isLoading}
+        >
+          <Text style={styles.menuItemTitle}>판매량-포인트 시뮬레이션</Text>
+          <Text style={styles.menuItemDescription}>
+            NFT 가치 성장 메커니즘을 시연하는 기능입니다.
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={handleGenerateTestData}
+          disabled={isLoading}
+        >
+          <Text style={styles.menuItemTitle}>테스트 데이터 생성</Text>
+          <Text style={styles.menuItemDescription}>
+            시연용 NFT와 혜택 사용 데이터를 생성합니다.
+            (여자아이들, 비비, 이찬원 각각 다양한 티어의 NFT 생성)
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.menuItem, styles.dangerMenuItem]}
+          onPress={handleResetData}
+          disabled={isLoading}
+        >
+          <Text style={styles.menuItemTitle}>데이터 초기화</Text>
+          <Text style={styles.menuItemDescription}>
+            모든 NFT와 혜택 사용 내역을 삭제합니다.
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+        disabled={isLoading}
+      >
+        <Text style={styles.backButtonText}>사용자 모드로 돌아가기</Text>
+      </TouchableOpacity>
+      
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <Text style={styles.loadingText}>처리 중...</Text>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f8f8f8',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    color: COLORS.primary,
+  },
+  menuContainer: {
+    flex: 1,
+  },
+  menuItem: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+  },
+  dangerMenuItem: {
+    borderColor: '#ff6b6b',
+    borderWidth: 1,
+  },
+  menuItemTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  menuItemDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  backButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  backButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  }
+});
+5. 개발 계획 및 일정
+5.1 개발 단계
+5.1.1 기반 구조 설정 (1일)
+
+프로젝트 폴더 구조 구성
+자산 파일 구조화 및 통합
+기본 컴포넌트 및 유틸리티 함수 구현
+
+5.1.2 핵심 컴포넌트 개발 (2일)
+
+아티스트 선택 화면 구현
+NFT 카드 컴포넌트 구현
+안전한 이미지 로딩 컴포넌트 구현
+티어 및 혜택 관련 컴포넌트 구현
+
+5.1.3 NFT 관련 기능 개발 (2일)
+
+QR 스캔 및 테스트 모드 구현
+NFT 컬렉션 화면 구현
+NFT 합성 기능 구현 및 다중 선택 문제 해결
+
+5.1.4 혜택 시스템 개발 (1일)
+
+혜택 메뉴 화면 구현
+팬사인회 응모 시스템 구현
+혜택 차감 애니메이션 구현
+
+5.1.5 관리자 기능 개발 (1일)
+
+관리자 대시보드 구현
+판매량-포인트 시뮬레이션 화면 구현
+테스트 데이터 생성 및 초기화 기능 구현
+
+5.1.6 테스트 및 최적화 (1일)
+
+전반적인 기능 테스트
+오류 수정 및 성능 최적화
+이미지 로딩 및 애니메이션 최적화
+
+5.2 개발 우선순위
+
+핵심 기능 안정성 확보
+
+QR 코드 스캔 문제 해결
+NFT 합성 다중 선택 문제 해결
+이미지 로딩 안정화
+
+
+시각적 매력 향상
+
+아티스트별 차별화된 테마 적용
+애니메이션 효과 강화
+고품질 이미지 자산 활용
+
+
+시연 최적화
+
+관리자 모드 간소화
+테스트 데이터 다양화
+판매량-포인트 시뮬레이션 강화
+
+
+확장성 확보
+
+이찬원 아티스트 추가를 통한 확장성 검증
+모듈화된 컴포넌트 구조로 향후 확장 용이성 확보
+일관된 데이터 구조 설계
+
+
+
+5.3 개발 일정
+일정개발 내용담당자1일차프로젝트 구조 설정, 자산 통합, 기본 컴포넌트개발팀2-3일차아티스트 화면, NFT 컴포넌트, 이미지 로딩 처리개발팀4-5일차QR 스캔, NFT 컬렉션, NFT 합성 기능개발팀6일차혜택 시스템, 팬사인회 응모, 애니메이션개발팀7일차관리자 기능, 시뮬레이션, 테스트 데이터개발팀8일차전체 테스트, 오류 수정, 최적화개발팀
+6. 투자자 시연 가이드
+6.1 시연 준비
+
+앱 초기화 및 테스트 데이터 생성
+
+앱 실행 후 로고 5번 탭으로 관리자 모드 진입
+"데이터 초기화" 실행
+"테스트 데이터 생성" 실행
+사용자 모드로 돌아가기
+
+
+시연 환경 준비
+
+모든 이미지 자산이 정상적으로 로드되는지 확인
+기기 배터리 및 화면 설정 확인
+시연 시나리오 숙지
+
+
+
+6.2 시연 시나리오 (15분)
+6.2.1 아티스트 소개 (2분)
+
+앱 실행 및 아티스트 선택 화면 소개
+세 아티스트(여자아이들, 비비, 이찬원) 각각의 특징 설명
+여자아이들 선택 및 홈 화면으로 진입
+
+6.2.2 NFT 획득 과정 (3분)
+
+QR 코드 스캔 기능 소개
+테스트 모드를 사용하여 다양한 티어의 NFT 획득 시연
+NFT 카드와 티어 시스템 설명
+
+6.2.3 판매량-포인트 시뮬레이션 (핵심, 4분)
+
+관리자 모드 진입 (로고 5번 탭)
+Founders 티어 NFT 선택
+판매량 증가 시뮬레이션 실행
+티어별 포인트 성장 비교 설명
+비즈니스 인사이트 강조: 선구매 보상, 자발적 홍보 동기부여
+
+6.2.4 NFT 합성 시스템 (핵심, 4분)
+
+NFT 컬렉션에서 Fan 티어 NFT 선택
+동일 티어 NFT 3개 선택 후 합성 과정 시연
+상위 티어(Supporter) NFT 획득 및 혜택 변화 설명
+비즈니스 가치 설명: 희소성 강화, 구매 유도, 티어 업그레이드 동기
+
+6.2.5 혜택 및 차감 애니메이션 (2분)
+
+혜택 화면에서 팬사인회 응모 선택
+티어별 혜택 차이 설명
+팬사인회 응모 양식 작성 및 제출
+응모 횟수 차감 애니메이션 시연
+
+6.3 핵심 비즈니스 포인트 강조
+시연 중 다음 핵심 비즈니스 포인트를 강조합니다:
+
+판매량 연동 가치 상승
+
+"굿즈 판매량이 증가할수록 NFT 포인트가 자동으로 상승합니다."
+"이는 팬들이 적극적으로 굿즈를 홍보하도록 유도하는 효과가 있습니다."
+
+
+선구매 보상
+
+"초기 구매자(Founders 티어)는 일반 팬(Fan 티어)보다 최대 15배 빠른 포인트 성장률을 가집니다."
+"이는 선구매를 유도하고 FOMO(Fear Of Missing Out) 효과를 창출합니다."
+
+
+NFT 합성 시스템
+
+"3개의 NFT를 합성하여 1개의 상위 티어 NFT를 얻을 수 있습니다."
+"이는 희소성을 유지하면서 추가 구매를 유도하는 효과가 있습니다."
+
+
+티어별 차등 혜택
+
+"상위 티어일수록 더 많은 팬사인회 응모 기회, 더 빠른 티켓 예매 권한 등이 제공됩니다."
+"이는 NFT를 단순한 디지털 수집품을 넘어 실제 효용을 갖는 자산으로 만듭니다."
+
+
+확장 가능성
+
+"이 시스템은 여자아이들, 비비, 이찬원뿐 아니라 다양한 K-POP 아티스트로 확장할 수 있습니다."
+"각 아티스트의 팬덤 특성에 맞춘 차별화된 혜택을 제공할 수 있습니다."
+
+
+
+7. 결론
+본 개발 기획서는 K-POP NFT 리워드 에코시스템 앱의 안정적이고 매력적인 버전을 개발하기 위한 상세 계획을 제시했습니다. 기존의 문제점을 분석하고 해결 방안을 도출하여, 투자자 시연에 최적화된 앱을 구현하는 것을 목표로 합니다.
+특히, 다음 세 가지 핵심 가치가 효과적으로 전달될 수 있도록 기능을 설계했습니다:
+
+판매량 연동 NFT 가치 상승 (자동 포인트 증가)
+NFT 합성을 통한 티어 업그레이드 (희소성 관리)
+티어별 차등화된 실질적 혜택 (효용성 제공)
+
+이를 통해 투자자들에게 K-POP 굿즈 시장과 NFT를 연계하는 혁신적인 비즈니스 모델의 가치와 잠재력을 명확하게 전달할 수 있을 것입니다. 또한, 안정성을 최우선으로 하여 개발 중 발생했던 QR 스캐너 모듈 오류, NFT 합성 기능 오류 등을 해결하고, 풍부한 테스트 데이터를 통해 다양한 시나리오를 시연할 수 있도록 설계했습니다.
+이 기획서를 바탕으로 개발된 앱은 투자자들에게 강력한 인상을 남기고, 비즈니스 확장 가능성을 효과적으로 전달할 수 있을 것입니다.
