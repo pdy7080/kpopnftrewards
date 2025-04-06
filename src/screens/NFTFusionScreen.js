@@ -33,7 +33,7 @@ const CARD_HEIGHT = CARD_WIDTH * 1.4;
 
 const NFTFusionScreen = React.memo(({ route, navigation }) => {
   const { selectedNFT } = route.params;
-  const { nfts, selectedArtist } = useNFTContext();
+  const { artistNFTs, selectedArtist, updateNFTData, userNFTs } = useNFTContext();
   const [availableNFTs, setAvailableNFTs] = useState([]);
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,10 +55,16 @@ const NFTFusionScreen = React.memo(({ route, navigation }) => {
         setIsLoading(true);
         setError(null);
         
+        if (!artistNFTs) {
+          throw new Error("NFT 데이터를 불러올 수 없습니다.");
+        }
+        
         // 선택된 아티스트의 NFT만 필터링하고, 이미 선택된 NFT는 제외
-        const filtered = nfts.filter(nft => 
+        const filtered = artistNFTs.filter(nft => 
           nft.artistId === selectedArtist?.id && 
-          nft.id !== selectedNFT?.id
+          nft.id !== selectedNFT?.id &&
+          nft.tier === selectedNFT?.tier &&
+          nft.tier !== 'founders' // founders 티어는 합성 불가
         );
         
         if (isMounted.current) {
@@ -75,7 +81,7 @@ const NFTFusionScreen = React.memo(({ route, navigation }) => {
     };
     
     loadNFTs();
-  }, [nfts, selectedArtist, selectedNFT]);
+  }, [artistNFTs, selectedArtist, selectedNFT]);
   
   // NFT 선택 처리
   const handleSelectNFT = useCallback((nft) => {
@@ -120,14 +126,74 @@ const NFTFusionScreen = React.memo(({ route, navigation }) => {
         },
         {
           text: "합성",
-          onPress: () => {
-            // TODO: NFT 합성 로직 구현
-            navigation.goBack();
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              
+              // 합성할 NFT 목록 생성 (선택된 NFT + 추가 선택된 NFT들)
+              const fusionNFTs = [selectedNFT, ...selectedNFTs];
+              
+              // 현재 티어에서 다음 티어로 업그레이드
+              const currentTier = selectedNFT.tier;
+              const tierOrder = ['fan', 'supporter', 'earlybird'];
+              const currentTierIndex = tierOrder.indexOf(currentTier);
+              
+              if (currentTierIndex === -1 || currentTierIndex === tierOrder.length - 1) {
+                Alert.alert("합성 불가", "이미 최고 티어이거나 합성할 수 없는 티어입니다.");
+                setIsLoading(false);
+                return;
+              }
+              
+              const nextTier = tierOrder[currentTierIndex + 1];
+              
+              // 새로운 NFT 생성
+              const newNFT = {
+                id: `nft_${Date.now()}`,
+                name: `${selectedArtist.name} ${nextTier.toUpperCase()} 티어 NFT`,
+                artistId: selectedArtist.id,
+                memberName: selectedNFT.memberName,
+                tier: nextTier,
+                image: selectedNFT.image, // 임시로 같은 이미지 사용
+                currentPoints: TIERS[nextTier].basePoints,
+                initialPoints: TIERS[nextTier].basePoints,
+                description: `${selectedArtist.name}의 ${nextTier.toUpperCase()} 티어 NFT입니다.`,
+                createdAt: new Date().toISOString(),
+                canFuse: nextTier !== 'founders',
+                fusionCount: 0
+              };
+              
+              // 기존 NFT 목록에서 합성된 NFT 제거
+              const updatedNFTs = userNFTs.filter(nft => 
+                !fusionNFTs.some(fusionNft => fusionNft.id === nft.id)
+              );
+              
+              // 새 NFT 추가
+              const finalNFTs = [...updatedNFTs, newNFT];
+              
+              // NFT 데이터 업데이트
+              await updateNFTData(finalNFTs);
+              
+              Alert.alert(
+                "합성 성공",
+                `${nextTier.toUpperCase()} 티어 NFT가 생성되었습니다!`,
+                [
+                  { 
+                    text: "확인", 
+                    onPress: () => navigation.navigate('NFTDetails', { nft: newNFT })
+                  }
+                ]
+              );
+            } catch (error) {
+              console.error("NFT 합성 오류:", error);
+              Alert.alert("오류", "NFT 합성 중 오류가 발생했습니다.");
+            } finally {
+              setIsLoading(false);
+            }
           }
         }
       ]
     );
-  }, [selectedNFTs, navigation]);
+  }, [selectedNFTs, selectedNFT, selectedArtist, userNFTs, updateNFTData, navigation]);
   
   // 로딩 중 표시
   if (isLoading) {

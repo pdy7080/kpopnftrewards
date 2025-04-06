@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ const MENU_ITEM_WIDTH = (width - 48) / 2;
 
 const ArtistHomeScreen = ({ navigation, route }) => {
   const { selectedArtist, artistNFTs, syncNFTData } = useNFTContext();
+  const [logoPressCount, setLogoPressCount] = useState(0);
+  const [logoPressTimer, setLogoPressTimer] = useState(null);
   
   // 화면 진입 시 데이터 동기화
   useEffect(() => {
@@ -44,8 +46,31 @@ const ArtistHomeScreen = ({ navigation, route }) => {
   }, [navigation]);
   
   const handleLogoPress = useCallback(() => {
-    navigation.navigate(ROUTES.HOME);
-  }, [navigation]);
+    // 로고 클릭 카운트 증가
+    setLogoPressCount(prev => {
+      const newCount = prev + 1;
+      
+      // 타이머 초기화
+      if (logoPressTimer) {
+        clearTimeout(logoPressTimer);
+      }
+      
+      // 3초 후 카운트 리셋
+      const timer = setTimeout(() => {
+        setLogoPressCount(0);
+      }, 3000);
+      
+      setLogoPressTimer(timer);
+      
+      // 5번 클릭 시 관리자 화면으로 이동
+      if (newCount >= 5) {
+        navigation.navigate(ROUTES.ADMIN);
+        return 0; // 카운트 리셋
+      }
+      
+      return newCount;
+    });
+  }, [navigation, logoPressTimer]);
   
   // NFT 컬렉션 메뉴 클릭 처리
   const handleNFTCollectionPress = useCallback(() => {

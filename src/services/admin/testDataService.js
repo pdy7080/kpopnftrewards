@@ -4,35 +4,32 @@ import { TIERS } from '../../constants/tiers';
 import { NFT_THEMES } from '../../constants/nftThemes';
 import { calculatePoints, getTierByPurchaseOrder } from '../pointsCalculator';
 import { generateNFTDetails } from '../../utils/nftGenerator';
+import { MEMBER_IMAGES } from '../../constants/memberImages';
 
 // 테스트 데이터 생성을 위한 상수 정의
-const EVENTS = [
-  {
-    id: 'chanwon_debut',
-    name: '이찬원 데뷔 기념 NFT',
-    description: '이찬원의 데뷔를 기념하는 특별한 NFT 컬렉션',
-    imageIndex: 1
-  },
-  {
-    id: 'chanwon_concert',
-    name: '이찬원 전국투어 콘서트 기념 NFT',
-    description: '이찬원의 첫 전국투어 콘서트를 기념하는 특별한 NFT',
-    imageIndex: 2
-  },
-  {
-    id: 'chanwon_album',
-    name: '이찬원 정규 1집 발매 기념 NFT',
-    description: '이찬원의 첫 정규앨범 발매를 기념하는 특별한 NFT',
-    imageIndex: 3
-  }
-];
+const EVENTS = {
+  FAN_SIGNING: 'fan_signing',
+  MEET_AND_GREET: 'meet_and_greet',
+  CONCERT: 'concert',
+  FAN_MEETING: 'fan_meeting'
+};
 
-// 이찬원 이미지 매핑
+// 아티스트별 이미지 매핑
 const ARTIST_IMAGES = {
+  gidle: [
+    require('../../../assets/artists/gidle/group1.jpg'),
+    require('../../../assets/artists/gidle/group2.jpg'),
+    require('../../../assets/artists/gidle/group3.jpg')
+  ],
+  bibi: [
+    require('../../../assets/artists/bibi/profile1.jpg'),
+    require('../../../assets/artists/bibi/profile2.jpg'),
+    require('../../../assets/artists/bibi/profile3.jpg')
+  ],
   chanwon: [
-    require('../../../assets/artists/chanwon/profile.jpg'),
-    require('../../../assets/artists/chanwon/chanwon2.jpg'),
-    require('../../../assets/artists/chanwon/chanwon3.jpg')
+    require('../../../assets/artists/chanwon/profile1.jpg'),
+    require('../../../assets/artists/chanwon/profile2.jpg'),
+    require('../../../assets/artists/chanwon/profile3.jpg')
   ]
 };
 
@@ -110,43 +107,183 @@ const calculatePointsLocally = (tier, purchaseOrder, currentSales) => {
   return initialPoints + additionalPoints;
 };
 
-/**
- * Fan 티어 NFT 생성 함수
- */
-const createFanTierNFT = (artistId, memberId, eventName, imageIndex) => {
-  const purchaseOrder = Math.floor(Math.random() * 4000) + 1000; // 1000-5000 범위
-  const currentSales = purchaseOrder + Math.floor(Math.random() * 1000);
+// NFT 특성 상수
+const NFT_CHARACTERISTICS = {
+  RARITY: ['common', 'rare', 'epic', 'legendary'],
+  SEASON: ['spring', 'summer', 'autumn', 'winter'],
+  EDITION: ['standard', 'limited', 'special']
+};
+
+// 랜덤 요소 선택 함수
+const getRandomElement = (array) => array[Math.floor(Math.random() * array.length)];
+
+// 랜덤 날짜 생성 함수 (최근 1년 내)
+const getRandomDate = () => {
+  const now = new Date();
+  const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+  return new Date(oneYearAgo.getTime() + Math.random() * (now.getTime() - oneYearAgo.getTime()));
+};
+
+// NFT 이벤트 목록 (각 아티스트별 3개씩 고정)
+const NFT_EVENTS = {
+  gidle: [
+    '2025 월드투어 기념 주화',
+    '데뷔 7주년 기념 주화',
+    'QUEENDOM 우승 기념 주화'
+  ],
+  bibi: [
+    '첫 월드투어 기념 주화',
+    '정규 2집 발매 기념 주화',
+    '첫 돔투어 기념 주화'
+  ],
+  chanwon: [
+    '미스터트롯 기념 주화',
+    '첫 단독 콘서트 기념 주화',
+    '전국투어 기념 주화'
+  ]
+};
+
+// NFT 생성 함수 수정
+const createNFT = (artistId, eventIndex) => {
+  const artist = ARTISTS[artistId];
+  if (!artist) {
+    console.error(`Invalid artist ID: ${artistId}`);
+    return null;
+  }
   
-  // 멤버 ID에 이미지 인덱스 추가 (비비, 이찬원의 경우)
-  const actualMemberId = (artistId === 'bibi' || artistId === 'chanwon') 
-    ? `${memberId}${imageIndex + 1}`  // profile1, profile2 등으로 매핑
-    : memberId;
+  // 이벤트 이름과 이미지 가져오기
+  const eventName = NFT_EVENTS[artistId][eventIndex];
+  const image = ARTIST_IMAGES[artistId][eventIndex];
+  
+  // 주화 설명 생성
+  const coinFeature = getRandomElement(COIN_FEATURES);
+  const coinDesign = getRandomElement(COIN_DESIGNS);
+  const coinRarity = getRandomElement(COIN_RARITY);
+  const coinValue = getRandomElement(COIN_VALUE);
+  
+  const description = `${coinFeature} ${coinDesign} ${coinRarity} ${coinValue}`;
+  
+  // Fan 티어로 고정
+  const tier = 'fan';
+  
+  // 구매 순번 범위 설정 (Fan 티어: 1001-5000)
+  const purchaseOrderMin = 1001;
+  const purchaseOrderMax = 5000;
+  
+  const purchaseOrder = Math.floor(Math.random() * (purchaseOrderMax - purchaseOrderMin + 1)) + purchaseOrderMin;
+  const additionalSales = Math.floor(Math.random() * 1000);
+  const currentSales = purchaseOrder + additionalSales;
   
   return {
-    id: `test_${artistId}_fan_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`,
+    id: `${artistId}_event_${eventIndex}_${Date.now()}`,
     artistId,
-    memberId: actualMemberId,
     name: `${eventName} NFT`,
-    description: generateNFTDescription(eventName),
-    tier: 'fan',
-    initialPoints: TIERS.fan.initialPoints,
-    currentPoints: TIERS.fan.initialPoints,
+    description,
+    tier,
+    initialPoints: TIERS[tier].initialPoints,
+    currentPoints: calculatePointsLocally(tier, purchaseOrder, currentSales),
     initialSales: purchaseOrder,
     currentSales,
-    createdAt: new Date().toISOString(),
+    image,
+    createdAt: getRandomDate().toISOString(),
     canFuse: true
   };
 };
 
 /**
- * NFT 설명 생성 함수
+ * 특정 아티스트의 테스트 데이터 생성
+ * 
+ * @param {string} artistId - 아티스트 ID
+ * @param {string} userId - 사용자 ID (기본값: 'user123')
+ * @returns {Promise<Object>} 결과 객체
  */
-const generateNFTDescription = (eventName) => {
-  const feature = COIN_FEATURES[Math.floor(Math.random() * COIN_FEATURES.length)];
-  const design = COIN_DESIGNS[Math.floor(Math.random() * COIN_DESIGNS.length)];
-  const limitedCount = Math.floor(Math.random() * 3000) + 2000;
-  
-  return `${eventName}을 기념하여 제작된 한정판 주화입니다. ${feature} ${design} 전 세계 ${limitedCount}개 한정 제작되었으며, 실물 주화 구매자에게만 제공되는 NFT입니다.`;
+export const generateArtistTestData = async (artistId, userId = 'user123') => {
+  try {
+    const artist = ARTISTS[artistId];
+    if (!artist) {
+      return { success: false, error: '유효하지 않은 아티스트 ID입니다.' };
+    }
+    
+    // 기존 NFT 데이터 가져오기
+    const existingNFTsJson = await AsyncStorage.getItem(`user_nfts_${userId}`);
+    let existingNFTs = [];
+    if (existingNFTsJson) {
+      try {
+        existingNFTs = JSON.parse(existingNFTsJson);
+        // 해당 아티스트의 NFT 제거
+        existingNFTs = existingNFTs.filter(nft => nft.artistId !== artistId);
+      } catch (parseError) {
+        console.error('NFT 데이터 파싱 오류:', parseError);
+      }
+    }
+    
+    const nfts = [];
+    
+    // 3개의 이벤트 NFT 생성
+    for (let i = 0; i < 3; i++) {
+      const nft = createNFT(artistId, i);
+      if (nft) {
+        nfts.push(nft);
+      }
+    }
+    
+    // 새 NFT와 기존 NFT 합치기
+    const updatedNFTs = [...existingNFTs, ...nfts];
+    
+    // AsyncStorage에 저장
+    await AsyncStorage.setItem(`user_nfts_${userId}`, JSON.stringify(updatedNFTs));
+    
+    return { success: true, nfts: updatedNFTs, nftsCount: nfts.length };
+  } catch (error) {
+    console.error('테스트 데이터 생성 오류:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// 모든 아티스트의 테스트 데이터 생성 함수
+export const generateAllArtistsTestData = async (userId = 'user123') => {
+  try {
+    const results = [];
+    const artistIds = Object.keys(ARTISTS);
+    
+    // 각 아티스트별로 테스트 데이터 생성
+    for (const artistId of artistIds) {
+      const result = await generateArtistTestData(artistId, userId);
+      results.push(result);
+      
+      if (!result.success) {
+        console.error(`${ARTISTS[artistId].name} 테스트 데이터 생성 실패:`, result.error);
+      }
+    }
+    
+    const success = results.every(result => result.success);
+    const totalNFTs = results.reduce((sum, result) => sum + (result.nftsCount || 0), 0);
+    
+    return { 
+      success, 
+      totalNFTs,
+      message: `총 ${totalNFTs}개의 NFT가 생성되었습니다. (${artistIds.length}명의 아티스트)`
+    };
+  } catch (error) {
+    console.error('전체 테스트 데이터 생성 오류:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// 모든 아티스트의 테스트 데이터를 한 번에 생성하는 함수
+export const generateAllTestData = async (userId = 'user123') => {
+  try {
+    // 기존 데이터 초기화
+    await AsyncStorage.removeItem(`user_nfts_${userId}`);
+    
+    // 모든 아티스트의 테스트 데이터 생성
+    const result = await generateAllArtistsTestData(userId);
+    
+    return result;
+  } catch (error) {
+    console.error('전체 테스트 데이터 생성 오류:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 /**
@@ -185,147 +322,6 @@ export const generateTestData = () => {
   });
   
   return testData;
-};
-
-/**
- * 특정 아티스트의 테스트 데이터 생성
- * 
- * @param {string} artistId - 아티스트 ID
- * @param {string} userId - 사용자 ID (기본값: 'user123')
- * @returns {Promise<Object>} 결과 객체
- */
-export const generateArtistTestData = async (artistId, userId = 'user123') => {
-  try {
-    // 아티스트 정보 확인
-    const artist = ARTISTS[artistId];
-    if (!artist) {
-      return { success: false, error: '유효하지 않은 아티스트 ID입니다.' };
-    }
-    
-    // 기존 NFT 데이터 가져오기
-    const existingNFTsJson = await AsyncStorage.getItem(`user_nfts_${userId}`);
-    let existingNFTs = [];
-    if (existingNFTsJson) {
-      try {
-        existingNFTs = JSON.parse(existingNFTsJson);
-        // 해당 아티스트의 NFT 제거
-        existingNFTs = existingNFTs.filter(nft => nft.artistId !== artistId);
-      } catch (parseError) {
-        console.error('NFT 데이터 파싱 오류:', parseError);
-      }
-    }
-    
-    // 새 NFT 데이터 생성
-    const nfts = [];
-    const members = artist.members;
-    
-    // 티어별 NFT 개수 설정
-    const tierCounts = {
-      founders: 1,
-      earlybird: 2,
-      supporter: 3,
-      fan: 3,
-    };
-    
-    // 각 티어별로 NFT 생성
-    Object.entries(tierCounts).forEach(([tier, count]) => {
-      for (let i = 0; i < count; i++) {
-        // 랜덤 멤버 선택
-        const member = members[Math.floor(Math.random() * members.length)];
-        
-        // 티어별 구매 순번 범위 설정
-        let purchaseOrderMin, purchaseOrderMax;
-        switch (tier) {
-          case 'founders':
-            purchaseOrderMin = 1;
-            purchaseOrderMax = 100;
-            break;
-          case 'earlybird':
-            purchaseOrderMin = 101;
-            purchaseOrderMax = 500;
-            break;
-          case 'supporter':
-            purchaseOrderMin = 501;
-            purchaseOrderMax = 1000;
-            break;
-          default: // fan
-            purchaseOrderMin = 1001;
-            purchaseOrderMax = 5000;
-            break;
-        }
-        
-        // 랜덤 구매 순번 생성
-        const purchaseOrder = Math.floor(
-          Math.random() * (purchaseOrderMax - purchaseOrderMin + 1)
-        ) + purchaseOrderMin;
-        
-        // 현재 판매량 설정 (구매 순번 + 랜덤 추가 판매량)
-        const additionalSales = Math.floor(Math.random() * 10000);
-        const currentSales = purchaseOrder + additionalSales;
-        
-        // 포인트 계산
-        const currentPoints = calculatePointsLocally(tier, purchaseOrder, currentSales);
-        
-        // NFT 이름 및 설명 생성
-        const nftDetails = generateNFTDetails(artistId, member.id);
-        
-        // NFT 객체 생성
-        nfts.push({
-          id: `test_${artistId}_${tier}_${i}_${Date.now()}`,
-          artistId,
-          memberId: member.id,
-          name: nftDetails.name,
-          description: nftDetails.description,
-          tier,
-          initialPoints: TIERS[tier].initialPoints,
-          currentPoints,
-          initialSales: purchaseOrder,
-          currentSales,
-          createdAt: new Date().toISOString(),
-          canFuse: true
-        });
-      }
-    });
-    
-    // 기존 NFT와 새 NFT 합치기
-    const allNFTs = [...existingNFTs, ...nfts];
-    
-    // NFT 저장
-    await AsyncStorage.setItem(`user_nfts_${userId}`, JSON.stringify(allNFTs));
-    
-    // 혜택 사용 내역 가져오기
-    const benefitUsageJson = await AsyncStorage.getItem(`benefit_usage_${userId}`);
-    let benefitUsage = {};
-    if (benefitUsageJson) {
-      try {
-        benefitUsage = JSON.parse(benefitUsageJson);
-        // 해당 아티스트의 혜택 제거
-        Object.keys(benefitUsage).forEach(key => {
-          if (key.startsWith(artistId)) {
-            delete benefitUsage[key];
-          }
-        });
-      } catch (parseError) {
-        console.error('혜택 사용 내역 파싱 오류:', parseError);
-      }
-    }
-    
-    // 해당 아티스트의 혜택 추가
-    benefitUsage[`${artistId}_fansign_1`] = {
-      usedCount: Math.floor(Math.random() * 3),
-      maxUses: 5,
-      remainingUses: 5 - Math.floor(Math.random() * 3),
-      lastUsedAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString()
-    };
-    
-    // 혜택 사용 내역 저장
-    await AsyncStorage.setItem(`benefit_usage_${userId}`, JSON.stringify(benefitUsage));
-    
-    return { success: true };
-  } catch (error) {
-    console.error('아티스트 테스트 데이터 생성 오류:', error);
-    return { success: false, error: error.message };
-  }
 };
 
 /**

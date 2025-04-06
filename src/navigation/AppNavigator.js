@@ -10,6 +10,7 @@ import ArtistSelectionScreen from '../screens/ArtistSelectionScreen';
 import ArtistHomeScreen from '../screens/ArtistHomeScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NFTDetailScreen from '../screens/NFTDetailScreen';
+import NFTDetailsScreen from '../screens/NFTDetailsScreen';
 import NFTCollectionScreen from '../screens/NFTCollectionScreen';
 import NFTFusionScreen from '../screens/NFTFusionScreen';
 import { QRScanScreen } from '../screens/QRScanScreen';
@@ -78,6 +79,14 @@ const AppNavigator = () => {
           options={{
             title: SCREEN_TITLES[ROUTES.NFT_DETAIL],
             headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="NFTDetails"
+          component={NFTDetailsScreen}
+          options={{
+            title: 'NFT 상세정보',
+            headerShown: true,
           }}
         />
         <Stack.Screen

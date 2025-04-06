@@ -41,16 +41,17 @@ const AdminDashboardScreen = ({ navigation }) => {
     setIsLoading(true);
     
     try {
-      // 각 아티스트별로 테스트 데이터 생성
-      for (const artistId of Object.keys(ARTISTS)) {
-        await generateArtistTestData(artistId);
-      }
+      const result = await generateAllTestData();
       
-      Alert.alert(
-        '성공', 
-        '모든 아티스트의 테스트 데이터가 생성되었습니다.',
-        [{ text: '확인', onPress: () => setIsLoading(false) }]
-      );
+      if (result.success) {
+        Alert.alert(
+          '성공', 
+          result.message || '모든 아티스트의 테스트 데이터가 생성되었습니다.',
+          [{ text: '확인', onPress: () => setIsLoading(false) }]
+        );
+      } else {
+        throw new Error(result.error || '데이터 생성 실패');
+      }
     } catch (error) {
       console.error('테스트 데이터 생성 오류:', error);
       Alert.alert(

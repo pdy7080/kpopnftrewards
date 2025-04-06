@@ -8,7 +8,9 @@ import {
   ScrollView,
   Image,
   Dimensions,
-  ActivityIndicator
+  ActivityIndicator,
+  Platform,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNFTContext } from '../contexts/NFTContext';
@@ -22,44 +24,52 @@ const CARD_WIDTH = (width - 48) / 2;
 const NFTCollectionScreen = () => {
   const navigation = useNavigation();
   const { artistNFTs, selectedArtistId, syncNFTData } = useNFTContext();
-  const [nfts, setNfts] = useState([]);
   const [selectedTier, setSelectedTier] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState({});
 
-  const loadNFTs = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      await syncNFTData();
-      setNfts(artistNFTs);
-    } catch (error) {
-      console.error('NFT 로드 오류:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [artistNFTs, syncNFTData]);
-
+  // 초기 데이터 로드
   useEffect(() => {
-    loadNFTs();
-  }, [loadNFTs]);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        await syncNFTData();
+      } catch (error) {
+        console.error('NFT 로드 오류:', error);
+        Alert.alert('오류', 'NFT 데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // NFT를 티어별로 그룹화하는 로직을 useMemo로 최적화
+    loadData();
+  }, [syncNFTData]);
+
+  // NFT를 티어별로 그룹화하는 로직
   const groupedNFTs = useMemo(() => {
-    return nfts.reduce((acc, nft) => {
+    return artistNFTs.reduce((acc, nft) => {
       if (!acc[nft.tier]) {
         acc[nft.tier] = [];
       }
       acc[nft.tier].push(nft);
       return acc;
     }, {});
-  }, [nfts]);
+  }, [artistNFTs]);
 
   const handleNFTPress = useCallback((nft) => {
     navigation.navigate('NFTDetails', { nft });
   }, [navigation]);
 
   const handleFusionPress = useCallback((nft) => {
-    navigation.navigate('NFTFusion', { selectedNFT: nft });
+    if (!nft) {
+      Alert.alert('오류', 'NFT 정보를 찾을 수 없습니다.');
+      return;
+    }
+    navigation.navigate('NFTFusion', { 
+      selectedNFT: nft,
+      tier: nft.tier,
+      artistId: nft.artistId
+    });
   }, [navigation]);
 
   const handleImageLoad = useCallback((nftId) => {
@@ -76,6 +86,14 @@ const NFTCollectionScreen = () => {
     }));
   }, []);
 
+  // 이미지 소스 처리 함수
+  const getImageSource = useCallback((nft) => {
+    if (!nft || !nft.image) {
+      return require('../assets/images/placeholder.png');
+    }
+    return nft.image;
+  }, []);
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -85,9 +103,27 @@ const NFTCollectionScreen = () => {
     );
   }
 
+  if (!artistNFTs.length) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
+            보유한 NFT가 없습니다.{'\n'}QR 스캔으로 NFT를 획득해보세요!
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        overScrollMode="always"
+      >
         {Object.entries(TIERS).map(([tier, tierData]) => {
           const tierNFTs = groupedNFTs[tier] || [];
           const isSelected = selectedTier === tier;
@@ -103,12 +139,12 @@ const NFTCollectionScreen = () => {
                 onPress={() => setSelectedTier(isSelected ? null : tier)}
               >
                 <View style={styles.tierInfo}>
-                  <Text style={styles.tierTitle}>{tierData.name}</Text>
+                  <Text style={styles.tierTitle}>{tierData.displayName}</Text>
                   <Text style={styles.tierCount}>{tierNFTs.length}개 보유</Text>
                 </View>
                 <View style={[styles.tierBadge, { backgroundColor: tierData.color }]}>
                   <Text style={styles.tierBenefitText}>
-                    {tierData.benefits.fanSigning}회 응모 가능
+                    {tierData.benefits?.fanSigning || 0}회 응모 가능
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -130,7 +166,7 @@ const NFTCollectionScreen = () => {
                           />
                         )}
                         <Image 
-                          source={nft.image || require('../assets/images/placeholder.png')}
+                          source={getImageSource(nft)}
                           style={styles.nftImage}
                           resizeMode="cover"
                           onLoadStart={() => handleImageLoadStart(nft.id)}
@@ -155,15 +191,6 @@ const NFTCollectionScreen = () => {
                       )}
                     </TouchableOpacity>
                   ))}
-                  {tierNFTs.length === 0 && (
-                    <View style={styles.emptyContainer}>
-                      <Text style={styles.emptyText}>
-                        {tier === 'fan' 
-                          ? 'QR 스캔으로 Fan 티어 NFT를 획득하세요!'
-                          : `Fan 티어 NFT 3개를 합성하여 ${tierData.name} 티어로 업그레이드하세요!`}
-                      </Text>
-                    </View>
-                  )}
                 </View>
               )}
             </View>
@@ -182,6 +209,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   loadingText: {
     textAlign: 'center',
@@ -235,7 +265,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     overflow: 'hidden',
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   imageContainer: {
     width: '100%',
