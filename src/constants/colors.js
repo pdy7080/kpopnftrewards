@@ -36,3 +36,36 @@ export const COLORS = {
     founders: '#F9A825',
   },
 };
+
+export const SIZES = {
+  // 전역 사이즈
+  base: 8,
+  font: 14,
+  radius: 12,
+  padding: 16,
+  
+  // 폰트 사이즈
+  h1: 30,
+  h2: 24,
+  h3: 18,
+  h4: 16,
+  body1: 16,
+  body2: 14,
+  body3: 12,
+  body4: 10,
+  
+  // 앱 사이즈
+  width: '100%',
+  height: '100%',
+};
+
+export const FONTS = {
+  h1: { fontSize: SIZES.h1, fontWeight: 'bold' },
+  h2: { fontSize: SIZES.h2, fontWeight: 'bold' },
+  h3: { fontSize: SIZES.h3, fontWeight: 'bold' },
+  h4: { fontSize: SIZES.h4, fontWeight: 'bold' },
+  body1: { fontSize: SIZES.body1 },
+  body2: { fontSize: SIZES.body2 },
+  body3: { fontSize: SIZES.body3 },
+  body4: { fontSize: SIZES.body4 },
+};

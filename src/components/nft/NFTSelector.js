@@ -7,13 +7,17 @@ import {
   Modal, 
   TouchableOpacity, 
   FlatList, 
-  SafeAreaView 
+  SafeAreaView,
+  Animated
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import NFTCard from './NFTCard';
 import Button from '../common/Button';
 import { COLORS } from '../../constants/colors';
 import { TIERS } from '../../constants/tiers';
+
+// Animated FlatList 생성
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 /**
  * NFT 선택 모달 컴포넌트
@@ -157,50 +161,50 @@ const NFTSelector = ({
           
           <View style={styles.selectionInfo}>
             <Text style={styles.selectionText}>
-선택됨: {localSelectedNFTs.length}/{maxSelection}
-           </Text>
-           
-           {requireSameTier && selectedTier && (
-             <Text style={styles.tierSelectionText}>
-               <Text style={{color: TIERS[selectedTier]?.color || COLORS.primary}}>
-                 {TIERS[selectedTier]?.displayName || selectedTier} 티어
-               </Text> NFT만 선택 가능합니다
-             </Text>
-           )}
-         </View>
-         
-         <FlatList
-           data={filteredNFTs()}
-           renderItem={renderNFTItem}
-           keyExtractor={item => item.id}
-           contentContainerStyle={styles.nftList}
-           ListEmptyComponent={
-             <Text style={styles.emptyText}>
-               {requireSameTier && selectedTier
-                 ? `${TIERS[selectedTier]?.displayName || selectedTier} 티어 NFT가 없습니다`
-                 : 'NFT가 없습니다'}
-             </Text>
-           }
-         />
-         
-         <View style={styles.buttons}>
-           <Button 
-             title="취소" 
-             type="outline" 
-             onPress={onClose} 
-             style={styles.button}
-           />
-           <Button 
-             title="선택 완료" 
-             onPress={handleConfirm} 
-             disabled={localSelectedNFTs.length === 0}
-             style={styles.button}
-           />
-         </View>
-       </View>
-     </SafeAreaView>
-   </Modal>
- );
+              선택됨: {localSelectedNFTs.length}/{maxSelection}
+            </Text>
+            
+            {requireSameTier && selectedTier && (
+              <Text style={styles.tierSelectionText}>
+                <Text style={{color: TIERS[selectedTier]?.color || COLORS.primary}}>
+                  {TIERS[selectedTier]?.displayName || selectedTier} 티어
+                </Text> NFT만 선택 가능합니다
+              </Text>
+            )}
+          </View>
+          
+          <AnimatedFlatList
+            data={filteredNFTs()}
+            renderItem={renderNFTItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.nftList}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                {requireSameTier && selectedTier
+                  ? `${TIERS[selectedTier]?.displayName || selectedTier} 티어 NFT가 없습니다`
+                  : '선택 가능한 NFT가 없습니다'}
+              </Text>
+            }
+          />
+          
+          <View style={styles.buttons}>
+            <Button 
+              title="취소" 
+              type="outline" 
+              onPress={onClose} 
+              style={styles.button}
+            />
+            <Button 
+              title="선택 완료" 
+              onPress={handleConfirm} 
+              disabled={localSelectedNFTs.length === 0}
+              style={styles.button}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
 };
 
 const styles = StyleSheet.create({

@@ -1,8 +1,14 @@
 // components/nft/NFTGrid.js
 import React from 'react';
-import { FlatList, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Animated } from 'react-native';
 import NFTCard from './NFTCard';
 import { COLORS } from '../../constants/colors';
+import { TIERS } from '../../constants/tiers';
+import { ARTISTS } from '../../constants/artists';
+import NFTFrame from './NFTFrame';
+
+// Animated FlatList 생성
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 /**
  * NFT 그리드 컴포넌트
@@ -47,6 +53,7 @@ const NFTGrid = ({
             onNFTPress && onNFTPress(item);
           }
         }}
+        style={styles.nftItem}
       >
         <NFTCard 
           nft={item} 
@@ -65,7 +72,7 @@ const NFTGrid = ({
   );
   
   return (
-    <FlatList
+    <AnimatedFlatList
       data={nfts}
       renderItem={renderNFTItem}
       keyExtractor={(item) => item.id}
@@ -78,20 +85,21 @@ const NFTGrid = ({
       ]}
       ListEmptyComponent={renderEmptyComponent}
       columnWrapperStyle={nfts.length > 0 ? styles.columnWrapper : null}
+      removeClippedSubviews={true}
+      initialNumToRender={8}
+      maxToRenderPerBatch={8}
+      windowSize={5}
     />
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 8,
-  },
-  emptyContentContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingBottom: 20,
   },
   columnWrapper: {
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
   },
   emptyContainer: {
     flex: 1,
@@ -101,8 +109,15 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: COLORS.textSecondary,
     textAlign: 'center',
+  },
+  emptyContentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  nftItem: {
+    margin: 8,
   }
 });
 

@@ -1,29 +1,5 @@
 // utils/nftGenerator.js
-
-// 아티스트별 이벤트 및 컨셉 데이터
-const NFT_THEMES = {
-  gidle: [
-    { name: "I-LAND 월드투어 기념 주화", desc: "여자아이들의 첫 월드투어 'I-LAND'를 기념하여 제작된 한정판 주화입니다." },
-    { name: "네버랜드 5주년 기념 주화", desc: "데뷔 5주년을 맞이한 여자아이들의 성장을 기념하는 특별 제작 주화입니다." },
-    { name: "퀸덤2 우승 기념 주화", desc: "Mnet '퀸덤2' 우승을 기념하여 제작된 트로피 형태의 기념 주화입니다." },
-    { name: "토마토소스 뮤직비디오 기념 주화", desc: "1억뷰를 돌파한 '토마토소스' 뮤직비디오를 기념하는 특별 주화입니다." },
-    { name: "여자아이들 팬미팅 한정판 주화", desc: "2025 글로벌 팬미팅을 기념하여 제작된 멤버별 시그니처가 새겨진 주화입니다." }
-  ],
-  bibi: [
-    { name: "휴먼 앨범 발매 기념 주화", desc: "BIBI의 메이저 앨범 'HUMAN'의 발매를 기념하는 특별 디자인 주화입니다." },
-    { name: "아시아 투어 기념 주화", desc: "BIBI의 첫 아시아 투어 'BIBI IN ASIA'를 기념하는 한정판 주화입니다." },
-    { name: "BIBI UNIVERSE 콘서트 주화", desc: "BIBI의 첫 단독 콘서트 'BIBI UNIVERSE'를 기념하는 스페셜 에디션 주화입니다." },
-    { name: "베스트 뮤지션 수상 기념 주화", desc: "2024 올해의 여성 아티스트상 수상을 기념하는 트로피 모티브 주화입니다." },
-    { name: "KAZINO 5억뷰 기념 주화", desc: "히트곡 'KAZINO'의 5억뷰 달성을 기념하는 특별 주화입니다." }
-  ],
-  chanwon: [
-    { name: "미스터트롯 기념 주화", desc: "미스터트롯 준우승을 기념하여 제작된 특별한 트로피 디자인 주화입니다." },
-    { name: "첫 단독 콘서트 기념 주화", desc: "이찬원의 첫 전국 투어 단독 콘서트를 기념하는 한정판 주화입니다." },
-    { name: "국민가수 시즌1 주화", desc: "국민가수 시즌1 출연을 기념하는 특별 제작 주화입니다." },
-    { name: "신곡 '우리 둘이' 발매 기념 주화", desc: "히트곡 '우리 둘이' 발매를 기념하여 제작된 음표 모티브 주화입니다." },
-    { name: "팬미팅 투어 한정판 주화", desc: "2025 전국 팬미팅 투어를 기념하는 시그니처 각인 주화입니다." }
-  ]
-};
+import { NFT_THEMES } from '../constants/nftThemes';
 
 // 재질 및 특징 설명 배열
 const COIN_FEATURES = [
@@ -68,59 +44,26 @@ const COIN_VALUE = [
  * @returns {object} - name, description 속성을 가진 객체
  */
 export const generateNFTDetails = (artistId, memberId) => {
-  const eventNames = {
-    gidle: [
-      '2025 월드투어 기념 플래티넘 주화',
-      '네버랜드 5주년 기념 골드 주화',
-      '퀸덤2 우승 기념 스페셜 주화',
-      '토마토소스 뮤직비디오 기념 실버 주화',
-      '여자아이들 팬미팅 한정판 주화'
-    ],
-    bibi: [
-      '휴먼 앨범 발매 기념 플래티넘 주화',
-      '아시아 투어 기념 골드 주화',
-      'BIBI UNIVERSE 콘서트 스페셜 주화',
-      '베스트 뮤지션 수상 기념 실버 주화',
-      'KAZINO 5억뷰 기념 한정판 주화'
-    ],
-    chanwon: [
-      '미스터트롯 기념 플래티넘 주화',
-      '첫 단독 콘서트 기념 골드 주화',
-      '국민가수 시즌1 스페셜 주화',
-      '신곡 우리 둘이 발매 기념 실버 주화',
-      '팬미팅 투어 한정판 주화'
-    ]
-  };
-
-  const descriptions = {
-    gidle: [
-      '전 세계 팬들과 함께하는 (여자)아이들의 첫 월드투어를 기념하여 제작된 플래티넘 주화입니다.',
-      '데뷔 5주년을 맞이한 (여자)아이들의 성장과 성과를 기념하는 골드 주화입니다.',
-      'Mnet 퀸덤2 우승을 기념하여 제작된 스페셜 에디션 주화입니다.',
-      '토마토소스 뮤직비디오 1억뷰 달성을 기념하는 실버 주화입니다.',
-      '전국 팬미팅 투어를 기념하여 제작된 한정판 주화입니다.'
-    ],
-    bibi: [
-      '비비의 정규 앨범 [휴먼] 발매를 기념하여 제작된 플래티넘 주화입니다.',
-      '첫 아시아 투어의 성공적인 개최를 기념하는 골드 주화입니다.',
-      'BIBI UNIVERSE 단독 콘서트를 기념하는 스페셜 에디션 주화입니다.',
-      '올해의 뮤지션상 수상을 기념하여 제작된 실버 주화입니다.',
-      'KAZINO 뮤직비디오 5억뷰 달성을 기념하는 한정판 주화입니다.'
-    ],
-    chanwon: [
-      '미스터트롯 준우승의 영광을 기념하는 플래티넘 주화입니다.',
-      '첫 단독 콘서트의 성공적인 개최를 기념하는 골드 주화입니다.',
-      '국민가수 시즌1 출연을 기념하는 스페셜 에디션 주화입니다.',
-      '신곡 [우리 둘이] 발매를 기념하여 제작된 실버 주화입니다.',
-      '전국 팬미팅 투어를 기념하여 제작된 한정판 주화입니다.'
-    ]
-  };
-
-  const randomIndex = Math.floor(Math.random() * eventNames[artistId].length);
+  // 아티스트별 테마 배열에서 랜덤 선택
+  const themes = NFT_THEMES[artistId] || NFT_THEMES.gidle;
+  const themeIndex = Math.floor(Math.random() * themes.length);
+  const theme = themes[themeIndex];
+  
+  // 각 설명 배열에서 랜덤 선택
+  const featureIndex = Math.floor(Math.random() * COIN_FEATURES.length);
+  const designIndex = Math.floor(Math.random() * COIN_DESIGNS.length);
+  const rarityIndex = Math.floor(Math.random() * COIN_RARITY.length);
+  const valueIndex = Math.floor(Math.random() * COIN_VALUE.length);
+  
+  // NFT 이름 생성
+  const nftName = `${theme.name} NFT`;
+  
+  // NFT 설명 생성
+  const nftDescription = `${theme.desc} ${COIN_FEATURES[featureIndex]} ${COIN_DESIGNS[designIndex]} ${COIN_RARITY[rarityIndex]} ${COIN_VALUE[valueIndex]}`;
   
   return {
-    name: eventNames[artistId][randomIndex],
-    description: descriptions[artistId][randomIndex]
+    name: nftName,
+    description: nftDescription
   };
 };
 

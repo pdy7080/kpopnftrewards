@@ -4,6 +4,7 @@
 export const ROUTES = {
   // 메인 화면
   ARTIST_SELECTION: 'ArtistSelection',
+  ARTIST_HOME: 'ArtistHome',
   HOME: 'Home',
   NFT_DETAIL: 'NFTDetail',
   NFT_COLLECTION: 'NFTCollection',
@@ -26,6 +27,7 @@ export const ROUTES = {
  */
 export const SCREEN_TITLES = {
   [ROUTES.ARTIST_SELECTION]: '아티스트 선택',
+  [ROUTES.ARTIST_HOME]: '아티스트 홈',
   [ROUTES.HOME]: '홈',
   [ROUTES.NFT_DETAIL]: 'NFT 상세정보',
   [ROUTES.NFT_COLLECTION]: 'NFT 컬렉션',

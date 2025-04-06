@@ -166,28 +166,33 @@ export const fuseNFTs = async (nfts) => {
     
     // 새 NFT 생성
     const baseNFT = nfts[0];
+    const details = generateNFTDetails(baseNFT.artistId, baseNFT.memberId);
+    
     const newNFT = {
       id: `nft_fused_${Date.now()}`,
       artistId: baseNFT.artistId,
       memberId: baseNFT.memberId,
-      name: `${baseNFT.name} (합성)`,
+      name: details.name,
+      description: details.description,
       tier: nextTier,
       initialPoints: TIERS[nextTier].initialPoints,
       currentPoints: TIERS[nextTier].initialPoints,
       initialSales: Math.min(...nfts.map(nft => nft.initialSales)),
       currentSales: Math.max(...nfts.map(nft => nft.currentSales)),
       createdAt: new Date().toISOString(),
-      canFuse: true
+      canFuse: true,
+      image: baseNFT.image
     };
     
     // 기존 NFT 목록에서 합성된 NFT 제거하고 새 NFT 추가
-    const savedNFTs = await AsyncStorage.getItem('user_nfts_user123');
+    const userId = 'user123'; // 시연용 고정 사용자 ID
+    const savedNFTs = await AsyncStorage.getItem(`user_nfts_${userId}`);
     let userNFTs = savedNFTs ? JSON.parse(savedNFTs) : [];
     
     userNFTs = userNFTs.filter(nft => !nfts.some(fusedNFT => fusedNFT.id === nft.id));
     userNFTs.push(newNFT);
     
-    await AsyncStorage.setItem('user_nfts_user123', JSON.stringify(userNFTs));
+    await AsyncStorage.setItem(`user_nfts_${userId}`, JSON.stringify(userNFTs));
     
     // 활동 내역 추가
     const activity = {
@@ -195,18 +200,24 @@ export const fuseNFTs = async (nfts) => {
       type: 'nft_fusion',
       date: new Date().toISOString(),
       title: 'NFT 합성',
-      detail: `${tier} 티어 NFT 3개 → ${nextTier} 티어 NFT 1개`
+      detail: `${TIERS[tier].displayName} 티어 NFT 3개 → ${TIERS[nextTier].displayName} 티어 NFT 1개`
     };
     
-    const savedActivities = await AsyncStorage.getItem('user_activities_user123');
-    const activities = savedActivities ? JSON.parse(savedActivities) : [];
-    activities.unshift(activity);
-    await AsyncStorage.setItem('user_activities_user123', JSON.stringify(activities));
+    const activities = await AsyncStorage.getItem(`user_activities_${userId}`);
+    const userActivities = activities ? JSON.parse(activities) : [];
+    userActivities.unshift(activity);
+    await AsyncStorage.setItem(`user_activities_${userId}`, JSON.stringify(userActivities));
     
-    return { success: true, newNFT };
+    return {
+      success: true,
+      newNFT
+    };
   } catch (error) {
     console.error('NFT 합성 오류:', error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error.message || 'NFT 합성 중 오류가 발생했습니다.'
+    };
   }
 };
 

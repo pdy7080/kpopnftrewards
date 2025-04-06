@@ -18,16 +18,22 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NFTCard } from '../../components/NFTCard';
+import NFTCard from '../../components/nft/NFTCard';
 import { COLORS } from '../../constants/colors';
 import { TIERS } from '../../constants/tiers';
 import { ARTISTS } from '../../constants/artists';
+import { LineChart } from 'react-native-chart-kit';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNFTContext } from '../../contexts/NFTContext';
+
+// Animated FlatList 생성
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 // 화면 너비 가져오기
 const { width } = Dimensions.get('window');
 
 // 간단한 선 그래프 컴포넌트
-const LineChart = ({ data, width, height, paddingVertical = 20, paddingHorizontal = 40 }) => {
+const LineChartComponent = ({ data, width, height, paddingVertical = 20, paddingHorizontal = 40 }) => {
   if (!data || data.length === 0) return null;
   
   // 그래프 사용 가능 영역 계산
@@ -189,101 +195,78 @@ const MEMBER_IMAGES = {
   },
   bibi: {
     bibi: require('../../assets/artists/bibi/profile.jpg'),
-    bibi1: require('../../assets/artists/bibi/profile.jpg'),
-    bibi2: require('../../assets/artists/bibi/profile.jpg'),
-    bibi3: require('../../assets/artists/bibi/profile.jpg'),
   },
   chanwon: {
     chanwon: require('../../assets/artists/chanwon/profile.jpg'),
-    chanwon1: require('../../assets/artists/chanwon/profile.jpg'),
-    chanwon2: require('../../assets/artists/chanwon/profile.jpg'),
-    chanwon3: require('../../assets/artists/chanwon/profile.jpg'),
   },
 };
 
+// NFT 이름 생성
+const getNFTName = (artistId, memberId) => {
+  const events = {
+    gidle: [
+      'I-LAND 월드투어 기념 주화',
+      '네버랜드 5주년 기념 주화',
+      '퀸덤2 우승 기념 주화',
+      '토마토소스 뮤직비디오 기념 주화',
+    ],
+    bibi: [
+      '휴먼 앨범 발매 기념 주화',
+      '아시아 투어 기념 주화',
+      'BIBI UNIVERSE 콘서트 주화',
+      'KAZINO 5억뷰 기념 주화',
+    ],
+    chanwon: [
+      '미스터트롯 기념 주화',
+      '첫 단독 콘서트 기념 주화',
+      '국민가수 시즌1 주화',
+      '신곡 우리 둘이 발매 기념 주화',
+    ],
+  };
+
+  const eventList = events[artistId] || events.gidle;
+  const randomIndex = Math.floor(Math.random() * eventList.length);
+  return `${eventList[randomIndex]} NFT`;
+};
+
 const SalesSimulationScreen = ({ navigation }) => {
-  // 사용자 NFT 목록
-  const [userNFTs, setUserNFTs] = useState([]);
-  // 선택된 NFT
+  const { userNFTs } = useNFTContext();
   const [selectedNFT, setSelectedNFT] = useState(null);
-  // NFT 선택기 모달 표시 여부
-  const [showNFTSelector, setShowNFTSelector] = useState(false);
-  // 판매량 입력값
   const [salesInput, setSalesInput] = useState('');
-  // 시뮬레이션 결과
   const [simulationResult, setSimulationResult] = useState(null);
-  // 애니메이션 값
   const pointsAnim = useRef(new Animated.Value(0)).current;
-  // 티어별 비교 데이터
   const [tierComparisonData, setTierComparisonData] = useState([]);
-  // 로딩 상태
   const [isLoading, setIsLoading] = useState(true);
   
-  // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
-    loadUserNFTs();
-  }, []);
-  
-  // 선택된 NFT가 변경될 때 판매량 입력값 초기화
-  useEffect(() => {
-    if (selectedNFT) {
-      setSalesInput(selectedNFT.currentSales.toString());
-      pointsAnim.setValue(selectedNFT.currentPoints);
+    if (userNFTs.length > 0 && !selectedNFT) {
+      setSelectedNFT(userNFTs[0]);
+      setSalesInput(userNFTs[0].currentSales.toString());
     }
-  }, [selectedNFT]);
+  }, [userNFTs]);
   
-  // 사용자 NFT 로드
-  const loadUserNFTs = async () => {
-    setIsLoading(true);
+  // NFT 이미지 가져오기
+  const getNFTImage = () => {
+    if (!selectedNFT) return require('../../assets/images/placeholder.png');
+    
     try {
-      const userId = 'user123'; // 시연용 고정 사용자 ID
-      const nftsJson = await AsyncStorage.getItem(`user_nfts_${userId}`);
-      
-      if (nftsJson) {
-        const nfts = JSON.parse(nftsJson);
-        setUserNFTs(nfts);
-        
-        // 선택된 NFT가 없으면 첫 번째 NFT 선택
-        if (!selectedNFT && nfts.length > 0) {
-          const foundersNFT = nfts.find(nft => nft.tier === 'founders');
-          const earlyBirdNFT = nfts.find(nft => nft.tier === 'earlybird');
-          
-          // Founders 티어 우선, 그 다음 Early Bird 티어, 없으면 첫 번째 NFT
-          const nftToSelect = foundersNFT || earlyBirdNFT || nfts[0];
-          setSelectedNFT(nftToSelect);
-          setSalesInput(nftToSelect.currentSales.toString());
-          pointsAnim.setValue(nftToSelect.currentPoints);
-        }
-      } else {
-        setUserNFTs([]);
-      }
+      return MEMBER_IMAGES[selectedNFT.artistId]?.[selectedNFT.memberId] || 
+             require('../../assets/images/placeholder.png');
     } catch (error) {
-      console.error('NFT 로드 오류:', error);
-      Alert.alert('오류', 'NFT 데이터를 로드하는 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
+      console.error('NFT 이미지 로드 오류:', error);
+      return require('../../assets/images/placeholder.png');
     }
   };
-  
-  // NFT 선택 처리
-  const handleSelectNFT = (nft) => {
-    setSelectedNFT(nft);
-    setShowNFTSelector(false);
-    setSimulationResult(null);
-  };
-  
-  // 판매량 입력 처리
-  const handleSalesInputChange = (text) => {
-    // 숫자만 입력 가능
-    if (/^\d*$/.test(text)) {
-      setSalesInput(text);
+
+  // 프레임 이미지 가져오기 함수 수정
+  const getFrameImage = () => {
+    try {
+      if (!selectedNFT) return TIER_FRAMES.fan;
+      return TIER_FRAMES[selectedNFT.tier] || TIER_FRAMES.fan;
+    } catch (error) {
+      console.warn('프레임 이미지 로드 오류:', error);
+      return TIER_FRAMES.fan;
     }
-  };
-  
-  // 판매량 증가 버튼 처리
-  const handleSalesIncrement = (amount) => {
-    const currentSales = parseInt(salesInput) || (selectedNFT?.currentSales || 0);
-    setSalesInput((currentSales + amount).toString());
   };
   
   // 티어별 포인트 상승률 계산
@@ -422,337 +405,199 @@ const SalesSimulationScreen = ({ navigation }) => {
     return points.toFixed(1);
   };
 
-  // NFT 카드 렌더링 함수
-  const renderNFTCard = (nft) => {
-    const artist = ARTISTS[nft.artistId];
-    const tierInfo = TIERS[nft.tier];
-    
-    // 아티스트별 이미지 선택
-    let memberImage;
-    if (nft.artistId === 'gidle') {
-      // 여자아이들의 경우 멤버 이미지 사용
-      const member = artist.members.find(m => m.id === nft.memberId) || artist.members[0];
-      memberImage = member.image;
-    } else if (nft.artistId === 'bibi') {
-      // 비비의 경우 프로필 이미지 사용
-      memberImage = artist.groupImage;
-    } else if (nft.artistId === 'chanwon') {
-      // 이찬원의 경우 프로필 이미지 사용
-      memberImage = artist.groupImage;
-    }
-    
-    // 티어별 프레임 이미지 선택
-    const frameImage = TIER_FRAMES[nft.tier];
-    
-    // 아티스트별 설명 텍스트
-    let description = nft.description;
-    if (!description) {
-      if (nft.artistId === 'gidle') {
-        description = '여자아이들의 특별한 순간을 기념하는 한정판 주화 NFT입니다.';
-      } else if (nft.artistId === 'bibi') {
-        description = '비비의 독특한 음악 세계를 담은 한정판 주화 NFT입니다.';
-      } else if (nft.artistId === 'chanwon') {
-        description = '이찬원의 감성적인 트로트 음악과 국민가수로서의 성장을 담은 한정판 주화 NFT입니다.';
-      }
-    }
-    
-    return (
-      <View style={styles.nftCardContainer}>
-        <View style={styles.nftImageContainer}>
-          <Image 
-            source={memberImage}
-            style={styles.nftImage}
-            resizeMode="cover"
-          />
-          <Image 
-            source={frameImage}
-            style={styles.nftFrame}
-            resizeMode="contain"
-          />
-        </View>
-        <View style={styles.nftInfo}>
-          <Text style={styles.nftName}>{nft.name}</Text>
-          <Text style={styles.nftDescription}>{description}</Text>
-          <Text style={styles.nftTier}>
-            {tierInfo.displayName} 티어
-          </Text>
-          <View style={styles.pointsRow}>
-            <Text style={styles.pointsLabel}>현재 포인트:</Text>
-            <Text style={styles.pointsValue}>{renderCurrentPoints(nft.currentPoints)}</Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  // NFT 선택 모달을 아티스트별로 그룹화하여 표시하는 함수
-  const renderGroupedNFTSelector = () => {
-    // 아티스트별로 NFT 그룹화
-    const groupedNFTs = {};
-    userNFTs.forEach(nft => {
-      if (!groupedNFTs[nft.artistId]) {
-        groupedNFTs[nft.artistId] = [];
-      }
-      groupedNFTs[nft.artistId].push(nft);
-    });
-    
-    return (
-      <View style={styles.modalContent}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>NFT 선택</Text>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setShowNFTSelector(false)}
-          >
-            <Text style={styles.closeButtonText}>닫기</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <ScrollView style={styles.nftSelectorScrollView}>
-          {Object.keys(groupedNFTs).map(artistId => {
-            const artist = ARTISTS[artistId];
-            const artistNFTs = groupedNFTs[artistId];
-            
-            return (
-              <View key={artistId} style={styles.artistGroup}>
-                <View style={styles.artistHeader}>
-                  <Text style={styles.artistName}>{artist.name}</Text>
-                </View>
-                
-                {artistNFTs.map(nft => (
-                  <TouchableOpacity
-                    key={nft.id}
-                    style={[
-                      styles.nftSelectorItem,
-                      selectedNFT?.id === nft.id && styles.selectedNFTItem
-                    ]}
-                    onPress={() => handleSelectNFT(nft)}
-                  >
-                    <View style={styles.nftSelectorInfo}>
-                      <Text style={styles.nftSelectorName}>{nft.name}</Text>
-                      <Text style={styles.nftSelectorTier}>
-                        {TIERS[nft.tier].displayName} 티어
-                      </Text>
-                      <Text style={styles.nftSelectorPoints}>
-                        현재 포인트: {nft.currentPoints.toFixed(1)}
-                      </Text>
-                    </View>
-                    <View style={styles.nftSelectorArrow}>
-                      <Text style={styles.nftSelectorArrowText}>→</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            );
-          })}
-        </ScrollView>
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>판매량-포인트 시뮬레이션</Text>
-          <Text style={styles.headerSubtitle}>NFT 가치 성장 메커니즘 시연</Text>
-        </View>
+      <ScrollView style={styles.scrollView}>
+        <Text style={styles.title}>판매량-포인트 시뮬레이션</Text>
         
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>NFT 데이터 로딩 중...</Text>
-          </View>
-        ) : userNFTs.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>시뮬레이션할 NFT가 없습니다.</Text>
-            <Text style={styles.emptySubtext}>먼저 테스트 데이터를 생성해주세요.</Text>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
+        {selectedNFT && (
+          <View style={styles.nftContainer}>
+            <LinearGradient
+              colors={[TIERS[selectedNFT.tier].color + '40', TIERS[selectedNFT.tier].color + '80']}
+              style={styles.nftGradient}
             >
-              <Text style={styles.backButtonText}>돌아가기</Text>
+              <View style={styles.nftCard}>
+                <View style={styles.nftImageContainer}>
+                  <Image source={getFrameImage()} style={styles.frameImage} />
+                  <Image source={getNFTImage()} style={styles.nftImage} />
+                </View>
+                
+                <View style={styles.nftInfo}>
+                  <View style={styles.tierBadge}>
+                    <Text style={styles.tierText}>
+                      {TIERS[selectedNFT.tier].displayName}
+                    </Text>
+                  </View>
+                  
+                  <Text style={styles.nftTitle}>
+                    {selectedNFT.artistId === 'gidle' ? '여자아이들' :
+                     selectedNFT.artistId === 'bibi' ? '비비' : '이찬원'}
+                    {' - '}
+                    {getNFTName(selectedNFT.artistId, selectedNFT.memberId)}
+                  </Text>
+                  
+                  <Text style={styles.nftSubtitle}>
+                    구매 순번: #{selectedNFT.initialSales}
+                  </Text>
+                  
+                  <Animated.Text style={styles.pointsText}>
+                    현재 포인트: {selectedNFT.currentPoints.toFixed(1)}
+                  </Animated.Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
+        )}
+
+        <View style={styles.simulationContainer}>
+          <Text style={styles.sectionTitle}>판매량 설정</Text>
+          
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              value={salesInput}
+              onChangeText={text => setSalesInput(text.replace(/[^0-9]/g, ''))}
+              keyboardType="numeric"
+              placeholder="판매량 입력"
+              placeholderTextColor="#999"
+            />
+            <Text style={styles.inputUnit}>개</Text>
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.incrementButton}
+              onPress={() => setSalesInput(((parseInt(salesInput) || 0) + 1000).toString())}
+            >
+              <Text style={styles.buttonText}>+1,000</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.incrementButton}
+              onPress={() => setSalesInput(((parseInt(salesInput) || 0) + 5000).toString())}
+            >
+              <Text style={styles.buttonText}>+5,000</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.incrementButton}
+              onPress={() => setSalesInput(((parseInt(salesInput) || 0) + 10000).toString())}
+            >
+              <Text style={styles.buttonText}>+10,000</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <>
-            {/* NFT 선택 영역 */}
-            <View style={styles.nftSelectContainer}>
-              {selectedNFT && renderNFTCard(selectedNFT)}
+
+          <TouchableOpacity
+            style={styles.simulateButton}
+            onPress={runSimulation}
+          >
+            <Text style={styles.simulateButtonText}>시뮬레이션 실행</Text>
+          </TouchableOpacity>
+        </View>
+
+        {simulationResult && (
+          <View style={styles.resultContainer}>
+            <Text style={styles.sectionTitle}>시뮬레이션 결과</Text>
+            
+            <View style={styles.resultCard}>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultLabel}>판매량 변화:</Text>
+                <Text style={styles.resultValue}>
+                  {simulationResult.initialSales.toLocaleString()} → {simulationResult.newSales.toLocaleString()}개
+                </Text>
+              </View>
               
-              <TouchableOpacity
-                style={styles.changeNFTButton}
-                onPress={() => setShowNFTSelector(true)}
-              >
-                <Text style={styles.changeNFTButtonText}>NFT 변경</Text>
-              </TouchableOpacity>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultLabel}>포인트 변화:</Text>
+                <Text style={styles.resultValue}>
+                  {simulationResult.initialPoints.toFixed(1)} → {simulationResult.newPoints.toFixed(1)}
+                  <Text style={styles.pointsIncrease}>
+                    {` (+${simulationResult.pointsIncrease.toFixed(1)})`}
+                  </Text>
+                </Text>
+              </View>
+              
+              <View style={styles.resultRow}>
+                <Text style={styles.resultLabel}>성장률:</Text>
+                <Text style={[
+                  styles.resultValue,
+                  { color: parseFloat(simulationResult.growthRate) > 0 ? COLORS.success : COLORS.error }
+                ]}>
+                  {simulationResult.growthRate}%
+                </Text>
+              </View>
             </View>
             
-            {/* 판매량 시뮬레이션 영역 */}
-            <View style={styles.simulationContainer}>
-              <Text style={styles.sectionTitle}>판매량 설정</Text>
-              
-              <View style={styles.salesInputContainer}>
-                <Text style={styles.salesInputLabel}>판매량:</Text>
-                <TextInput
-                  style={styles.salesInput}
-                  value={salesInput}
-                  onChangeText={handleSalesInputChange}
-                  keyboardType="numeric"
-                  placeholder="판매량 입력"
-                />
-                <Text style={styles.salesInputUnit}>개</Text>
+            {/* 티어별 비교 표 */}
+            <Text style={styles.tableTitle}>티어별 포인트 비교</Text>
+            <View style={styles.tableContainer}>
+              <View style={styles.tableHeader}>
+                <Text style={styles.tableHeaderCell}>티어</Text>
+                <Text style={styles.tableHeaderCell}>초기 포인트</Text>
+                <Text style={styles.tableHeaderCell}>새 포인트</Text>
+                <Text style={styles.tableHeaderCell}>증가율</Text>
               </View>
               
-              <View style={styles.incrementButtonsRow}>
-                <TouchableOpacity
-                  style={styles.incrementButton}
-                  onPress={() => handleSalesIncrement(1000)}
+              {tierComparisonData.map(item => (
+                <View 
+                  key={item.tier}
+                  style={[
+                    styles.tableRow,
+                    item.isSelected && { backgroundColor: item.color + '20' }
+                  ]}
                 >
-                  <Text style={styles.incrementButtonText}>+1,000</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.incrementButton}
-                  onPress={() => handleSalesIncrement(5000)}
-                >
-                  <Text style={styles.incrementButtonText}>+5,000</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.incrementButton}
-                  onPress={() => handleSalesIncrement(10000)}
-                >
-                  <Text style={styles.incrementButtonText}>+10,000</Text>
-                </TouchableOpacity>
-              </View>
-              
-              <TouchableOpacity
-                style={styles.simulateButton}
-                onPress={runSimulation}
-              >
-                <Text style={styles.simulateButtonText}>시뮬레이션 실행</Text>
-              </TouchableOpacity>
+                  <Text style={[
+                    styles.tableCell,
+                    item.isSelected && { fontWeight: 'bold', color: item.color }
+                  ]}>
+                    {item.name}
+                  </Text>
+                  <Text style={[
+                    styles.tableCell,
+                    item.isSelected && { fontWeight: 'bold' }
+                  ]}>
+                    {item.currentPoints.toFixed(1)}
+                  </Text>
+                  <Text style={[
+                    styles.tableCell,
+                    item.isSelected && { fontWeight: 'bold' }
+                  ]}>
+                    {item.newPoints.toFixed(1)}
+                  </Text>
+                  <Text style={[
+                    styles.tableCell,
+                    { color: parseFloat(item.growthRate) > 0 ? COLORS.success : COLORS.error },
+                    item.isSelected && { fontWeight: 'bold' }
+                  ]}>
+                    {item.growthRate}%
+                  </Text>
+                </View>
+              ))}
             </View>
             
-            {/* 시뮬레이션 결과 */}
-            {simulationResult && (
-              <View style={styles.resultContainer}>
-                <Text style={styles.sectionTitle}>시뮬레이션 결과</Text>
-                
-                <View style={styles.resultCard}>
-                  <View style={styles.resultRow}>
-                    <Text style={styles.resultLabel}>판매량 변화:</Text>
-                    <Text style={styles.resultValue}>
-                      {simulationResult.initialSales.toLocaleString()} → {simulationResult.newSales.toLocaleString()}개
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.resultRow}>
-                    <Text style={styles.resultLabel}>포인트 변화:</Text>
-                    <Text style={styles.resultValue}>
-                      {simulationResult.initialPoints.toFixed(1)} → {simulationResult.newPoints.toFixed(1)}
-                      <Text style={styles.pointsIncrease}>
-                        {` (+${simulationResult.pointsIncrease.toFixed(1)})`}
-                      </Text>
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.resultRow}>
-                    <Text style={styles.resultLabel}>성장률:</Text>
-                    <Text style={[
-                      styles.resultValue,
-                      { color: parseFloat(simulationResult.growthRate) > 0 ? COLORS.success : COLORS.error }
-                    ]}>
-                      {simulationResult.growthRate}%
-                    </Text>
-                  </View>
-                </View>
-                
-                {/* 티어별 비교 표 */}
-                <Text style={styles.tableTitle}>티어별 포인트 비교</Text>
-                <View style={styles.tableContainer}>
-                  <View style={styles.tableHeader}>
-                    <Text style={styles.tableHeaderCell}>티어</Text>
-                    <Text style={styles.tableHeaderCell}>초기 포인트</Text>
-                    <Text style={styles.tableHeaderCell}>새 포인트</Text>
-                    <Text style={styles.tableHeaderCell}>증가율</Text>
-                  </View>
-                  
-                  {tierComparisonData.map(item => (
-                    <View 
-                      key={item.tier}
-                      style={[
-                        styles.tableRow,
-                        item.isSelected && { backgroundColor: item.color + '20' }
-                      ]}
-                    >
-                      <Text style={[
-                        styles.tableCell,
-                        item.isSelected && { fontWeight: 'bold', color: item.color }
-                      ]}>
-                        {item.name}
-                      </Text>
-                      <Text style={[
-                        styles.tableCell,
-                        item.isSelected && { fontWeight: 'bold' }
-                      ]}>
-                        {item.currentPoints.toFixed(1)}
-                      </Text>
-                      <Text style={[
-                        styles.tableCell,
-                        item.isSelected && { fontWeight: 'bold' }
-                      ]}>
-                        {item.newPoints.toFixed(1)}
-                      </Text>
-                      <Text style={[
-                        styles.tableCell,
-                        { color: parseFloat(item.growthRate) > 0 ? COLORS.success : COLORS.error },
-                        item.isSelected && { fontWeight: 'bold' }
-                      ]}>
-                        {item.growthRate}%
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-                
-                {/* 비즈니스 인사이트 */}
-                <View style={styles.insightsContainer}>
-                  <Text style={styles.insightsTitle}>비즈니스 인사이트</Text>
-                  
-                  <View style={styles.insightItem}>
-                    <Text style={styles.insightHeader}>초기 구매자 보상</Text>
-                    <Text style={styles.insightText}>
-                      Founders 티어(1~100번)는 일반 Fan 티어(1000번 이후)보다 
-                      동일한 판매량 증가에도 최대 15배 높은 포인트 성장률을 가집니다.
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.insightItem}>
-                    <Text style={styles.insightHeader}>자발적 홍보 유도</Text>
-                    <Text style={styles.insightText}>
-                      NFT 가치가 판매량과 연동되어 자동 상승함으로써, 
-                      팬들이 자발적으로 굿즈를 홍보하도록 동기를 부여합니다.
-                    </Text>
-                  </View>
-                </View>
+            {/* 비즈니스 인사이트 */}
+            <View style={styles.insightsContainer}>
+              <Text style={styles.insightsTitle}>비즈니스 인사이트</Text>
+              
+              <View style={styles.insightItem}>
+                <Text style={styles.insightHeader}>초기 구매자 보상</Text>
+                <Text style={styles.insightText}>
+                  Founders 티어(1~100번)는 일반 Fan 티어(1000번 이후)보다 
+                  동일한 판매량 증가에도 최대 15배 높은 포인트 성장률을 가집니다.
+                </Text>
               </View>
-            )}
-          </>
+              
+              <View style={styles.insightItem}>
+                <Text style={styles.insightHeader}>자발적 홍보 유도</Text>
+                <Text style={styles.insightText}>
+                  NFT 가치가 판매량과 연동되어 자동 상승함으로써, 
+                  팬들이 자발적으로 굿즈를 홍보하도록 동기를 부여합니다.
+                </Text>
+              </View>
+            </View>
+          </View>
         )}
       </ScrollView>
-      
-      {/* NFT 선택 모달 */}
-      <Modal
-        visible={showNFTSelector}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowNFTSelector(false)}
-      >
-        <View style={styles.modalContainer}>
-          {renderGroupedNFTSelector()}
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -760,90 +605,51 @@ const SalesSimulationScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f8f8',
   },
-  scrollContent: {
-    padding: 16,
+  scrollView: {
+    flex: 1,
   },
-  header: {
-    marginBottom: 24,
-  },
-  headerTitle: {
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: 8,
+    color: '#333',
+    margin: 20,
+    marginBottom: 16,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
+  nftContainer: {
+    marginHorizontal: 20,
     marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
-  backButton: {
-    padding: 12,
-    backgroundColor: COLORS.primary,
-    borderRadius: 8,
+  nftGradient: {
+    borderRadius: 20,
+    padding: 2,
   },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  nftCardContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  nftCard: {
     flexDirection: 'row',
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 12,
+    alignItems: 'center',
   },
   nftImageContainer: {
-    width: 150,
-    height: 150,
+    width: 100,
+    height: 140,
     position: 'relative',
     marginRight: 16,
   },
-  nftFrame: {
+  frameImage: {
     position: 'absolute',
     width: '100%',
     height: '100%',
-    zIndex: 1,
+    resizeMode: 'contain',
   },
   nftImage: {
     width: '90%',
     height: '90%',
-    borderRadius: 8,
+    borderRadius: 10,
     alignSelf: 'center',
     marginTop: '5%',
   },
@@ -851,100 +657,98 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  nftName: {
-    fontSize: 18,
+  tierBadge: {
+    backgroundColor: COLORS.primary + '20',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  tierText: {
+    color: COLORS.primary,
     fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: 12,
   },
-  nftDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-    fontStyle: 'italic'
-  },
-  nftTier: {
-    fontSize: 14,
-    color: '#666',
+  nftTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 4,
   },
-  pointsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pointsLabel: {
+  nftSubtitle: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 8,
   },
-  pointsValue: {
+  pointsText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.primary,
   },
-  changeNFTButton: {
-    backgroundColor: COLORS.primary + '20',
-    padding: 8,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  changeNFTButtonText: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontWeight: 'bold',
+  simulationContainer: {
+    backgroundColor: 'white',
+    margin: 20,
+    padding: 20,
+    borderRadius: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
     marginBottom: 16,
   },
-  salesInputContainer: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
-  salesInputLabel: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  salesInput: {
+  input: {
     flex: 1,
+    height: 48,
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
+    backgroundColor: '#f8f8f8',
   },
-  salesInputUnit: {
+  inputUnit: {
+    marginLeft: 12,
     fontSize: 16,
-    marginLeft: 8,
+    color: '#666',
   },
-  incrementButtonsRow: {
+  buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   incrementButton: {
-    backgroundColor: COLORS.primary + '20',
-    padding: 8,
-    borderRadius: 8,
     flex: 1,
+    backgroundColor: COLORS.primary + '20',
+    paddingVertical: 12,
+    borderRadius: 12,
     marginHorizontal: 4,
+    alignItems: 'center',
   },
-  incrementButtonText: {
+  buttonText: {
     color: COLORS.primary,
-    fontSize: 14,
     fontWeight: 'bold',
-    textAlign: 'center',
+    fontSize: 14,
   },
   simulateButton: {
     backgroundColor: COLORS.primary,
-    padding: 16,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 24,
   },
   simulateButtonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -1079,117 +883,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
-  },
-  // 모달 스타일
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '90%',
-    height: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  closeButtonText: {
-    color: COLORS.primary,
-    fontWeight: 'bold',
-  },
-  nftSelectorList: {
-    padding: 16,
-  },
-  nftSelectorItem: {
-    flexDirection: 'row',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  selectedNFTItem: {
-    backgroundColor: COLORS.primary + '20',
-    borderColor: COLORS.primary,
-    borderWidth: 1,
-  },
-  nftSelectorInfo: {
-    flex: 1,
-  },
-  nftSelectorName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  nftSelectorArtist: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
-    fontWeight: 'bold',
-  },
-  nftSelectorTier: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
-  },
-  nftSelectorPoints: {
-    fontSize: 12,
-    color: '#666',
-  },
-  nftSelectorArrow: {
-    padding: 4,
-  },
-  nftSelectorArrowText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  nftSelectorHeader: {
-    padding: 12,
-    backgroundColor: COLORS.primary + '10',
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  nftSelectorHeaderText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    textAlign: 'center',
-  },
-  nftSelectorSeparator: {
-    height: 8,
-  },
-  artistGroup: {
-    marginBottom: 24,
-  },
-  artistHeader: {
-    padding: 12,
-    backgroundColor: COLORS.primary + '10',
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  artistName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  nftSelectorScrollView: {
-    flex: 1,
   },
 });
 

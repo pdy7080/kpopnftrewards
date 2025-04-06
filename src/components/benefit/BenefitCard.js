@@ -2,131 +2,85 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { COLORS } from '../../constants/colors';
-import SafeImage from '../common/SafeImage';
+import { Ionicons } from '@expo/vector-icons';
 
 /**
  * 혜택 카드 컴포넌트
  * 
  * @param {object} benefit - 혜택 객체
  * @param {function} onPress - 클릭 핸들러
- * @param {number} usedCount - 사용한 횟수
- * @param {number} maxUses - 최대 사용 가능 횟수
+ * @param {object} usageInfo - 사용 정보
  * @param {boolean} disabled - 비활성화 여부
  * @param {object} style - 추가 스타일
  */
 const BenefitCard = ({ 
   benefit,
   onPress,
-  usedCount = 0, 
-  maxUses = 0,
+  usageInfo = {},
   disabled = false,
   style
 }) => {
+  const { usedCount = 0, maxUses = 0 } = usageInfo;
+  
   // 남은 사용 횟수
   const remainingUses = Math.max(0, maxUses - usedCount);
   
   // 사용 가능 여부
   const isAvailable = !disabled && remainingUses > 0;
   
-  // 혜택 이미지 가져오기
-  const getBenefitImage = () => {
-    try {
-      // ID 형식이 artistId_type_number 형식으로 가정
-      const [artistId, type] = benefit.id.split('_');
-      
-      switch (type) {
-        case 'fansign':
-          switch (artistId) {
-            case 'gidle':
-              return require('../../assets/benefits/gidle/fansign.jpg');
-            case 'bibi':
-              return require('../../assets/benefits/bibi/fansign.jpg');
-            case 'chanwon':
-              return require('../../assets/benefits/chanwon/fansign.jpg');
-            default:
-              return require('../../assets/images/placeholder.png');
-          }
-        case 'concert':
-          switch (artistId) {
-            case 'gidle':
-              return require('../../assets/benefits/gidle/concert.jpg');
-            case 'bibi':
-              return require('../../assets/benefits/bibi/concert.jpg');
-            case 'chanwon':
-              return require('../../assets/benefits/chanwon/concert.jpg');
-            default:
-              return require('../../assets/images/placeholder.png');
-          }
-        case 'fanmeeting':
-          switch (artistId) {
-            case 'gidle':
-              return require('../../assets/benefits/gidle/fanmeeting.jpg');
-            case 'bibi':
-              return require('../../assets/benefits/bibi/fanmeeting.jpg');
-            case 'chanwon':
-              return require('../../assets/benefits/chanwon/fanmeeting.jpg');
-            default:
-              return require('../../assets/images/placeholder.png');
-          }
-        default:
-          return require('../../assets/images/placeholder.png');
-      }
-    } catch (error) {
-      console.warn('Benefit image error:', error);
-      return require('../../assets/images/placeholder.png');
+  // 혜택 타입에 따른 아이콘 가져오기
+  const getBenefitIcon = () => {
+    switch (benefit.type) {
+      case 'fansign':
+        return 'create-outline';
+      case 'concert':
+        return 'ticket-outline';
+      case 'fanmeeting':
+        return 'people-outline';
+      case 'exclusive':
+        return 'videocam-outline';
+      default:
+        return 'gift-outline';
     }
   };
-  
+
   return (
-    <TouchableOpacity 
-      style={[
-        styles.container,
-        disabled && styles.disabledContainer,
-        style
-      ]}
+    <TouchableOpacity
+      style={[styles.container, disabled && styles.disabledContainer]}
       onPress={onPress}
-      disabled={!isAvailable}
+      disabled={disabled}
       activeOpacity={0.8}
     >
-      <SafeImage 
-        source={getBenefitImage()}
+      <Image
+        source={benefit.image}
         style={styles.image}
         resizeMode="cover"
       />
       
-      <View style={styles.overlay} />
-      
-      <View style={styles.contentContainer}>
-        <Text style={styles.title} numberOfLines={1}>
-          {benefit.title}
-        </Text>
-        
-        <Text style={styles.description} numberOfLines={2}>
-          {benefit.description}
-        </Text>
-        
-        <View style={styles.usageInfo}>
-          {maxUses > 0 ? (
-            <Text style={[
-              styles.usageText,
-              !isAvailable && styles.disabledText
-            ]}>
-              남은 사용 횟수: {remainingUses}/{maxUses}
-            </Text>
-          ) : (
-            <Text style={styles.usageText}>
-              무제한 사용 가능
-            </Text>
+      <View style={styles.overlay}>
+        <View style={styles.header}>
+          <View style={styles.iconContainer}>
+            <Ionicons name={getBenefitIcon()} size={24} color="white" />
+          </View>
+          {!isAvailable && (
+            <View style={styles.unavailableBadge}>
+              <Text style={styles.unavailableText}>사용 불가</Text>
+            </View>
           )}
         </View>
         
-        {!isAvailable && (
-          <View style={styles.unavailableBadge}>
-            <Text style={styles.unavailableText}>
-              {disabled ? '사용 불가' : '사용 완료'}
-            </Text>
-          </View>
-        )}
+        <View style={styles.info}>
+          <Text style={styles.title}>{benefit.title}</Text>
+          <Text style={styles.description}>{benefit.description}</Text>
+          
+          {maxUses > 0 && (
+            <View style={styles.usageContainer}>
+              <Text style={styles.usageText}>
+                남은 횟수: {remainingUses}/{maxUses}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -134,44 +88,74 @@ const BenefitCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    overflow: 'hidden',
     backgroundColor: 'white',
-    elevation: 3,
-    margin: 8,
-    height: 180,
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: 'hidden',
+    elevation: 2,
   },
   disabledContainer: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   image: {
     width: '100%',
-    height: '100%',
+    height: 160,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  contentContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  unavailableBadge: {
+    backgroundColor: COLORS.error + '80',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  unavailableText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  info: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 16,
   },
   title: {
     color: 'white',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   description: {
-    color: 'white',
+    color: 'rgba(255,255,255,0.8)',
     fontSize: 14,
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  usageInfo: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 8,
-    padding: 6,
+  usageContainer: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
     alignSelf: 'flex-start',
   },
   usageText: {
@@ -179,23 +163,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  disabledText: {
-    color: '#ccc',
-  },
-  unavailableBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: COLORS.error,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-  unavailableText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-  }
 });
 
 export default BenefitCard;

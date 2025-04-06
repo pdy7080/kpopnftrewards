@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { NFTCard } from '../components/NFTCard';
+import NFTCard from '../components/nft/NFTCard';
 import { COLORS } from '../constants/colors';
 import { TIERS } from '../constants/tiers';
 

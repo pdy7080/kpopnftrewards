@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   FlatList, 
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,9 @@ import SafeImage from '../components/common/SafeImage';
 import { COLORS } from '../constants/colors';
 import { ARTISTS } from '../constants/artists';
 import { formatDate } from '../utils/formatters';
+
+// Animated FlatList 생성
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 // 독점 콘텐츠 목록 (실제로는 API에서 가져옴)
 const EXCLUSIVE_CONTENTS = {
@@ -128,17 +132,17 @@ const EXCLUSIVE_CONTENTS = {
       duration: '5:18',
       minTier: 'supporter'
     },
-{
-       id: 'chanwon_3',
-       title: '녹음실 비하인드',
-       date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-       thumbnail: 'chanwon_recording',
-       type: 'video',
-       duration: '7:53',
-       minTier: 'earlybird'
-     }
-   ]
- };
+    {
+      id: 'chanwon_3',
+      title: '녹음실 비하인드',
+      date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+      thumbnail: 'chanwon_recording',
+      type: 'video',
+      duration: '7:53',
+      minTier: 'earlybird'
+    }
+  ]
+};
 
 const ExclusiveContentScreen = ({ navigation, route }) => {
  const { userNFTs, artistNFTs, selectedArtistId } = useNFTContext();

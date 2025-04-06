@@ -1,377 +1,313 @@
-// HomeScreen.js
-import React, { useState, useEffect, useCallback } from 'react';
+// screens/HomeScreen.js
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
-  Image, 
   TouchableOpacity, 
-  ScrollView, 
+  Image, 
+  ScrollView,
   Dimensions,
-  StatusBar,
-  Platform,
-  Alert
+  Alert,
+  ActivityIndicator,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
-// Constants & Utils
-import { ARTISTS } from '../constants/artists';
-import { TIERS, TIER_UPGRADE_PATH } from '../constants/tiers';
+// Constants
 import { COLORS } from '../constants/colors';
-import { TEST_NFT_DATA } from '../constants/testData';
-import { ROUTES } from '../constants/navigation';
+import { ARTISTS } from '../constants/artists';
+import { TIERS } from '../constants/tiers';
+import { NFT_THEMES } from '../constants/nftThemes';
+import { generateNFTDetails } from '../utils/nftGenerator';
 
+// Context
+import { useNFTContext } from '../contexts/NFTContext';
+
+// 화면 너비 가져오기
 const { width } = Dimensions.get('window');
-const CARD_MARGIN = 10;
-const CARD_WIDTH = (width - (CARD_MARGIN * 4)) / 3;
-const LOGO_TAP_TIMEOUT = 3000; // 3초 이내에 탭해야 함
+const CARD_WIDTH = width * 0.4;
+const CARD_HEIGHT = CARD_WIDTH * 1.4;
 
-const HomeScreen = ({ route, navigation }) => {
-  const { artistId } = route?.params || {};
+const HomeScreen = React.memo(({ navigation }) => {
+  const { nfts, selectedArtist, setSelectedArtist } = useNFTContext();
+  const [filteredNFTs, setFilteredNFTs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const isMounted = useRef(true);
+  const logoPressCount = useRef(0);
+  const lastLogoPressTime = useRef(0);
   
-  // 로고 탭 카운터 추가
-  const [logoTapCount, setLogoTapCount] = useState(0);
-  const [lastTapTime, setLastTapTime] = useState(0);
-  
-  // 화면 포커스 시 로고 탭 카운터 초기화
-  useFocusEffect(
-    useCallback(() => {
-      setLogoTapCount(0);
-      setLastTapTime(0);
-      return () => {
-        setLogoTapCount(0);
-        setLastTapTime(0);
-      };
-    }, [])
-  );
-  
-  // artistId가 없는 경우 아티스트 선택 화면으로 이동
+  // 컴포넌트 마운트/언마운트 처리
   useEffect(() => {
-    if (!artistId) {
-      navigation.replace(ROUTES.ARTIST_SELECTION);
-    }
-  }, [artistId, navigation]);
-
-  const [nfts, setNfts] = useState([]);
-  const [userTier, setUserTier] = useState('earlybird');
-  const [userPoints, setUserPoints] = useState(138);
-  const [recentActivities, setRecentActivities] = useState([
-    { type: 'nft', title: 'NFT 획득: 미연 Founders', date: '2023.04.01' },
-    { type: 'benefit', title: '팬사인회 응모 완료', date: '2023.04.03' }
-  ]);
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
   
-  const artist = ARTISTS[artistId];
-  const tierInfo = TIERS[userTier];
-
+  // 아티스트가 선택되지 않은 경우 아티스트 선택 화면으로 이동
   useEffect(() => {
-    // 해당 아티스트의 NFT 데이터만 필터링
-    const artistNfts = TEST_NFT_DATA[artistId] || [];
-    setNfts(artistNfts);
-  }, [artistId]);
-
-  // 로고 탭 처리 함수
-  const handleLogoPress = useCallback(() => {
-    const currentTime = Date.now();
-    
-    // 마지막 탭으로부터 3초가 지났으면 카운터 초기화
-    if (currentTime - lastTapTime > LOGO_TAP_TIMEOUT) {
-      setLogoTapCount(1);
-      setLastTapTime(currentTime);
-      return;
+    if (!selectedArtist) {
+      navigation.replace('ArtistSelection');
     }
-    
-    // 탭 카운트 증가
-    const newCount = logoTapCount + 1;
-    setLogoTapCount(newCount);
-    setLastTapTime(currentTime);
-    
-    // 5번 탭하면 관리자 모드로 진입
-    if (newCount >= 5) {
-      setLogoTapCount(0);
-      setLastTapTime(0);
-      console.log('Navigating to Admin screen...');
+  }, [selectedArtist, navigation]);
+  
+  // NFT 필터링 및 로딩
+  useEffect(() => {
+    const loadNFTs = async () => {
       try {
-        // 중첩 네비게이터로 이동
-        navigation.navigate('Admin', {
-          screen: 'AdminDashboard'
-        });
-      } catch (error) {
-        console.error('관리자 모드 진입 오류:', error);
-        Alert.alert('오류', '관리자 모드 진입에 실패했습니다.');
+        setIsLoading(true);
+        setError(null);
+        
+        // 선택된 아티스트의 NFT만 필터링
+        const filtered = nfts.filter(nft => nft.artistId === selectedArtist?.id);
+        
+        if (isMounted.current) {
+          setFilteredNFTs(filtered);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error("NFT 로딩 오류:", err);
+        if (isMounted.current) {
+          setError("NFT를 불러오는 중 오류가 발생했습니다.");
+          setIsLoading(false);
+        }
       }
-    }
-  }, [logoTapCount, lastTapTime, navigation]);
-
-  const renderNftCard = (nft) => (
-    <TouchableOpacity 
-      key={nft.id}
-      style={styles.nftCard}
-      onPress={() => navigation.navigate('NFTDetail', { nft })}
-      activeOpacity={0.7}
-    >
-      <Image 
-        source={nft.image}
-        style={styles.nftImage}
-        resizeMode="cover"
-      />
-      <View style={styles.nftInfo}>
-        <Text style={styles.nftName} numberOfLines={1}>{nft.name}</Text>
-        <Text style={[styles.nftTier, { color: TIERS[nft.tier].color }]}>{TIERS[nft.tier].displayName}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const handleChangeArtist = () => {
-    navigation.replace('ArtistSelection');
-  };
-
-  const renderTierProgressBar = () => {
-    const nextTier = TIER_UPGRADE_PATH[userTier];
-    const currentTierPoints = tierInfo.initialPoints;
-    const nextTierPoints = nextTier ? TIERS[nextTier].initialPoints : currentTierPoints * 2;
-    const progress = (userPoints - currentTierPoints) / (nextTierPoints - currentTierPoints);
+    };
     
+    if (selectedArtist) {
+      loadNFTs();
+    }
+  }, [nfts, selectedArtist]);
+  
+  // 로고 탭 처리 (5번 연속 탭하면 관리자 화면으로 이동)
+  const handleLogoPress = useCallback(() => {
+    const now = Date.now();
+    if (now - lastLogoPressTime.current > 3000) {
+      logoPressCount.current = 0;
+    }
+    
+    logoPressCount.current += 1;
+    lastLogoPressTime.current = now;
+    
+    if (logoPressCount.current >= 5) {
+      navigation.navigate('Admin');
+      logoPressCount.current = 0;
+    }
+  }, [navigation]);
+  
+  // 아티스트 변경 버튼 처리
+  const handleChangeArtist = useCallback(() => {
+    navigation.navigate('ArtistSelection');
+  }, [navigation]);
+  
+  // NFT 카드 선택 처리
+  const handleNFTCardPress = useCallback((nft) => {
+    navigation.navigate('NFTDetail', { nft });
+  }, [navigation]);
+  
+  // 로딩 중 표시
+  if (isLoading) {
     return (
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View 
-            style={[
-              styles.progressFill, 
-              { 
-                width: `${Math.min(progress * 100, 100)}%`,
-                backgroundColor: tierInfo.color
-              }
-            ]} 
-          />
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>NFT를 불러오는 중...</Text>
         </View>
-        <Text style={styles.progressText}>
-          {nextTier ? `${userPoints} / ${nextTierPoints} 포인트` : `${userPoints} 포인트`}
-        </Text>
-      </View>
+      </SafeAreaView>
     );
-  };
-
-  const renderActivityItem = (activity, index) => (
-    <View key={index} style={styles.activityItem}>
-      <View style={styles.activityIconContainer}>
-        <Ionicons 
-          name={activity.type === 'nft' ? 'cube-outline' : 'gift-outline'} 
-          size={20} 
-          color={COLORS.primary} 
-        />
-      </View>
-      <View style={styles.activityContent}>
-        <Text style={styles.activityTitle}>{activity.title}</Text>
-        <Text style={styles.activityDate}>{activity.date}</Text>
-      </View>
-    </View>
-  );
-
+  }
+  
+  // 오류 발생 시 표시
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={48} color={COLORS.error} />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.retryButtonText}>돌아가기</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={handleLogoPress} activeOpacity={0.7}>
-            <Image 
-              source={artist.logo}
-              style={styles.artistLogo}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <Text style={styles.artistName}>{artist.name}</Text>
-        </View>
+        <TouchableOpacity 
+          style={styles.logoContainer}
+          onPress={handleLogoPress}
+          activeOpacity={0.8}
+        >
+          <Image 
+            source={require('../assets/images/logo.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+        
         <TouchableOpacity 
           style={styles.changeArtistButton}
           onPress={handleChangeArtist}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
-          <Text style={styles.changeArtistText}>다른 아티스트 선택</Text>
+          <Text style={styles.changeArtistText}>아티스트 변경</Text>
+          <Ionicons name="chevron-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-
+      
       <ScrollView 
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={true}
+        overScrollMode="always"
       >
-        {/* 티어 정보 섹션 */}
-        <View style={styles.section}>
-          <View style={[styles.tierCard, { borderColor: tierInfo.color }]}>
-            <View style={styles.tierHeader}>
-              <Ionicons name={tierInfo.icon} size={24} color={tierInfo.color} />
-              <Text style={[styles.tierName, { color: tierInfo.color }]}>{tierInfo.displayName} 티어</Text>
+        <View style={styles.content}>
+          <Text style={styles.title}>{selectedArtist?.name} NFT 컬렉션</Text>
+          
+          {filteredNFTs.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="images" size={48} color="#666" />
+              <Text style={styles.emptyText}>보유한 NFT가 없습니다</Text>
             </View>
-            <Text style={styles.pointsText}>{userPoints} 포인트</Text>
-            {renderTierProgressBar()}
-          </View>
-        </View>
-
-        {/* NFT 컬렉션 섹션 */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>NFT 컬렉션</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('NFTCollection')} activeOpacity={0.7}>
-              <Text style={styles.viewAllText}>모두 보기 {'>'} </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.nftGrid}>
-            {nfts.slice(0, 3).map(renderNftCard)}
-          </View>
-        </View>
-
-        {/* 주요 기능 섹션 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>주요 기능</Text>
-          <View style={styles.functionGrid}>
-            <TouchableOpacity 
-              style={[styles.functionCard, { backgroundColor: artist.primaryColor }]}
-              onPress={() => navigation.navigate('QRScan')}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="qr-code-outline" size={32} color="white" />
-              <Text style={styles.functionTitle}>QR 스캔</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.functionCard, { backgroundColor: artist.secondaryColor }]}
-              onPress={() => navigation.navigate('NFTFusion')}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="git-merge-outline" size={32} color="white" />
-              <Text style={styles.functionTitle}>NFT 합성</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.functionCard, { backgroundColor: artist.accentColor }]}
-              onPress={() => navigation.navigate('Benefits')}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="gift-outline" size={32} color="white" />
-              <Text style={styles.functionTitle}>혜택</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 최근 활동 섹션 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>최근 활동</Text>
-          <View style={styles.activitiesContainer}>
-            {recentActivities.map(renderActivityItem)}
-          </View>
+          ) : (
+            <View style={styles.nftGrid}>
+              {filteredNFTs.map((nft) => (
+                <TouchableOpacity
+                  key={nft.id}
+                  style={styles.nftCard}
+                  onPress={() => handleNFTCardPress(nft)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={nft.image}
+                    style={styles.nftImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.nftInfo}>
+                    <Text style={styles.nftName} numberOfLines={1}>
+                      {nft.name}
+                    </Text>
+                    <Text style={styles.nftArtist} numberOfLines={1}>
+                      {selectedArtist?.name} - {nft.memberName}
+                    </Text>
+                    <View style={[styles.tierBadge, { backgroundColor: TIERS[nft.tier].color }]}>
+                      <Text style={styles.tierText}>{TIERS[nft.tier].name}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#000',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    padding: 20,
+  },
+  errorText: {
+    color: '#fff',
+    marginTop: 16,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 24,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#1E1E1E',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  headerLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  artistLogo: {
-    width: 40,
+  logoContainer: {
+    padding: 8,
+  },
+  logo: {
+    width: 120,
     height: 40,
-    marginRight: 12,
-  },
-  artistName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
   },
   changeArtistButton: {
-    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingVertical: 8,
     paddingHorizontal: 12,
-    paddingVertical: 6,
     borderRadius: 20,
   },
   changeArtistText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: '#fff',
+    fontSize: 14,
+    marginRight: 4,
   },
-  content: {
+  scrollView: {
     flex: 1,
   },
-  contentContainer: {
-    paddingBottom: 20,
+  scrollContent: {
+    paddingBottom: 30,
   },
-  section: {
+  content: {
     padding: 16,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 16,
-  },
-  viewAllText: {
-    color: COLORS.primary,
-    fontSize: 14,
-  },
-  tierCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 2,
-    marginBottom: 16,
-  },
-  tierHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  tierName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  pointsText: {
+  title: {
+    color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 12,
+    marginBottom: 24,
   },
-  progressContainer: {
-    marginTop: 8,
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#333',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  progressText: {
-    color: '#aaa',
-    fontSize: 12,
-    marginTop: 4,
-    textAlign: 'right',
+  emptyText: {
+    color: '#999',
+    fontSize: 16,
+    marginTop: 16,
   },
   nftGrid: {
     flexDirection: 'row',
@@ -380,80 +316,40 @@ const styles = StyleSheet.create({
   },
   nftCard: {
     width: CARD_WIDTH,
-    marginBottom: 16,
-    backgroundColor: '#1E1E1E',
+    height: CARD_HEIGHT,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 12,
+    marginBottom: 16,
     overflow: 'hidden',
-    elevation: 2,
   },
   nftImage: {
     width: '100%',
     height: CARD_WIDTH,
   },
   nftInfo: {
-    padding: 8,
+    padding: 12,
   },
   nftName: {
-    fontSize: 12,
+    color: '#fff',
+    fontSize: 14,
     fontWeight: 'bold',
-    color: 'white',
     marginBottom: 4,
   },
-  nftTier: {
-    fontSize: 10,
-    fontWeight: 'bold',
+  nftArtist: {
+    color: '#ccc',
+    fontSize: 12,
+    marginBottom: 8,
   },
-  functionGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  functionCard: {
-    width: (width - 48) / 3,
-    height: 100,
+  tierBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
   },
-  functionTitle: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  activitiesContainer: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  activityItem: {
-    flexDirection: 'row',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  activityIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  activityContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  activityTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
-  },
-  activityDate: {
+  tierText: {
+    color: '#fff',
     fontSize: 12,
-    color: '#aaa',
+    fontWeight: 'bold',
   },
 });
 

@@ -1,231 +1,195 @@
 // screens/BenefitsScreen.js
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
   FlatList,
-  ActivityIndicator
+  Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNFTContext } from '../contexts/NFTContext';
-import BenefitCard from '../components/benefit/BenefitCard';
-import TierProgressBar from '../components/benefit/TierProgressBar';
-import { getArtistBenefits, getBenefitUsage } from '../services/benefitService';
-import { calculateTierProgress } from '../utils/tierHelpers';
 import { COLORS } from '../constants/colors';
 import { TIERS } from '../constants/tiers';
-import { ARTISTS } from '../constants/artists';
-import { TEST_NFT_DATA } from '../constants/testData';
 
-const BenefitsScreen = ({ navigation, route }) => {
-  const { userNFTs, artistNFTs, selectedArtistId } = useNFTContext();
-  
-  // 현재 아티스트 ID
-  const [artistId, setArtistId] = useState(route.params?.artistId || selectedArtistId);
-  
-  // 혜택 데이터
-  const [benefits, setBenefits] = useState([]);
-  const [benefitUsage, setBenefitUsage] = useState({});
-  
-  // 티어 프로그레스 데이터
-  const [tierProgress, setTierProgress] = useState(null);
-  
-  // 로딩 상태
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // 컴포넌트 마운트 시 데이터 로드
-  useEffect(() => {
-    if (artistId) {
-      loadBenefits(artistId);
-    }
-  }, [artistId]);
-  
-  // 혜택 데이터 로드
-  const loadBenefits = async (artistId) => {
-    setIsLoading(true);
+// Animated FlatList 생성
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+const BenefitsScreen = ({ navigation }) => {
+  const { userNFTs } = useNFTContext();
+  const [selectedTier, setSelectedTier] = useState('all');
+
+  // 사용자의 최고 티어 확인
+  const getUserHighestTier = () => {
+    if (!userNFTs || userNFTs.length === 0) return null;
     
-    try {
-      // 해당 아티스트의 혜택 목록 가져오기
-      const artistBenefits = getArtistBenefits(artistId);
-      setBenefits(artistBenefits);
+    const tiers = ['fan', 'supporter', 'earlybird', 'founders'];
+    let highestTier = 'fan';
+    
+    userNFTs.forEach(nft => {
+      const tierIndex = tiers.indexOf(nft.tier);
+      const highestTierIndex = tiers.indexOf(highestTier);
       
-      // 혜택 사용 내역 가져오기
-      const usage = await getBenefitUsage();
-      setBenefitUsage(usage);
-      
-      // 티어 프로그레스 계산
-      const nfts = artistNFTs.filter(nft => nft.artistId === artistId);
-      
-      if (nfts.length > 0) {
-        // 가장 높은 티어의 NFT 찾기
-        const tierOrder = { founders: 3, earlybird: 2, supporter: 1, fan: 0 };
-        
-        const highestTierNFT = nfts.reduce((prev, current) => {
-          return (tierOrder[current.tier] > tierOrder[prev.tier]) ? current : prev;
-        });
-        
-        // 티어 진행률 계산
-        const progress = calculateTierProgress(highestTierNFT.tier, highestTierNFT.currentPoints);
-        setTierProgress(progress);
-      } else {
-        // 테스트 데이터에서 NFT 가져오기
-        const testNfts = TEST_NFT_DATA[artistId] || [];
-        if (testNfts.length > 0) {
-          // 가장 높은 티어의 NFT 찾기
-          const tierOrder = { founders: 3, earlybird: 2, supporter: 1, fan: 0 };
-          
-          const highestTierNFT = testNfts.reduce((prev, current) => {
-            return (tierOrder[current.tier] > tierOrder[prev.tier]) ? current : prev;
-          });
-          
-          // 티어 진행률 계산
-          const progress = {
-            tier: highestTierNFT.tier,
-            progress: 0.5,
-            nextTier: 'supporter',
-            points: highestTierNFT.currentPoints,
-            requiredPoints: 10
-          };
-          setTierProgress(progress);
-        } else {
-          setTierProgress(null);
-        }
+      if (tierIndex > highestTierIndex) {
+        highestTier = nft.tier;
       }
-    } catch (error) {
-      console.error('혜택 데이터 로드 오류:', error);
-      
-      // 오류 발생 시 기본 티어 프로그레스 설정
-      setTierProgress({
-        tier: 'fan',
-        progress: 0.5,
-        nextTier: 'supporter',
-        points: 5,
-        requiredPoints: 10
-      });
-    } finally {
-      setIsLoading(false);
+    });
+    
+    return highestTier;
+  };
+
+  const userHighestTier = getUserHighestTier();
+
+  // 혜택 데이터
+  const benefits = [
+    {
+      id: 'fansign',
+      title: '팬사인회 응모',
+      icon: 'person',
+      tiers: {
+        fan: { count: 1, description: '1회 응모 가능' },
+        supporter: { count: 3, description: '3회 응모 가능' },
+        earlybird: { count: 5, description: '5회 응모 가능' },
+        founders: { count: 10, description: '10회 응모 가능' }
+      }
+    },
+    {
+      id: 'concert',
+      title: '콘서트 우선 예매',
+      icon: 'musical-notes',
+      tiers: {
+        fan: { time: 0, description: '일반 예매' },
+        supporter: { time: 12, description: '12시간 전 예매' },
+        earlybird: { time: 24, description: '24시간 전 예매' },
+        founders: { time: 48, description: '48시간 전 예매' }
+      }
+    },
+    {
+      id: 'content',
+      title: '독점 콘텐츠',
+      icon: 'play-circle',
+      tiers: {
+        fan: { access: 'basic', description: '기본 콘텐츠' },
+        supporter: { access: 'premium', description: '프리미엄 콘텐츠' },
+        earlybird: { access: 'vip', description: 'VIP 콘텐츠' },
+        founders: { access: 'all', description: '모든 콘텐츠' }
+      }
     }
-  };
-  
-  // 혜택 선택 처리
-  const handleBenefitPress = (benefit) => {
-    // 혜택 유형에 따라 다른 화면으로 이동
-    switch (benefit.type) {
-      case 'fansign':
-        navigation.navigate('FansignApplication', { benefit });
-        break;
-      case 'concert':
-        navigation.navigate('ConcertTicket', { benefit });
-        break;
-      default:
-        // 기본적으로 해당 혜택의 상세 화면으로 이동
-        navigation.navigate('BenefitDetail', { benefit });
-    }
-  };
-  
-  // 아티스트 정보
-  const artistInfo = ARTISTS[artistId] || {};
-  
-  // 혜택 카드 렌더링
-  const renderBenefitCard = ({ item }) => (
-    <BenefitCard
-      benefit={item}
-      tierProgress={tierProgress}
-      usage={benefitUsage[item.id] || 0}
-      onPress={() => handleBenefitPress(item)}
-    />
-  );
-  
-  // 팬사인회 응모 버튼
-  const handleFansignPress = () => {
-    navigation.navigate('FansignApplication');
-  };
-  
-  // 콘서트 예매 버튼
-  const handleConcertPress = () => {
-    navigation.navigate('ConcertTicket');
-  };
-  
-  // 독점 콘텐츠 버튼
-  const handleExclusiveContentPress = () => {
-    navigation.navigate('ExclusiveContent');
-  };
-  
-  // 로딩 중 표시
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>혜택 정보를 불러오는 중...</Text>
-      </SafeAreaView>
-    );
-  }
-  
+  ];
+
+  const renderTierFilter = useCallback(() => (
+    <View style={styles.tierFilterContainer}>
+      <ScrollView 
+        horizontal 
+        style={styles.tierFilter}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tierFilterContent}
+      >
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            selectedTier === 'all' && styles.filterButtonSelected
+          ]}
+          onPress={() => setSelectedTier('all')}
+        >
+          <Text style={[
+            styles.filterButtonText,
+            selectedTier === 'all' && styles.filterButtonTextSelected
+          ]}>전체 보기</Text>
+        </TouchableOpacity>
+
+        {Object.entries(TIERS).map(([tier, tierInfo]) => (
+          <TouchableOpacity
+            key={tier}
+            style={[
+              styles.filterButton,
+              selectedTier === tier && styles.filterButtonSelected,
+              { borderColor: tierInfo.color }
+            ]}
+            onPress={() => setSelectedTier(tier)}
+          >
+            <Text style={[
+              styles.filterButtonText,
+              { color: tierInfo.color },
+              selectedTier === tier && styles.filterButtonTextSelected
+            ]}>{tierInfo.displayName}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  ), [selectedTier]);
+
+  const renderBenefitItem = useCallback(({ item: benefit }) => (
+    <View style={styles.benefitCard}>
+      <View style={styles.benefitHeader}>
+        <Ionicons name={benefit.icon} size={24} color={COLORS.primary} />
+        <Text style={styles.benefitTitle}>{benefit.title}</Text>
+      </View>
+
+      <View style={styles.tierBenefits}>
+        {Object.entries(TIERS).map(([tier, tierInfo]) => {
+          const isAvailable = userHighestTier && 
+            ['founders', 'earlybird', 'supporter', 'fan'].indexOf(userHighestTier) >= 
+            ['founders', 'earlybird', 'supporter', 'fan'].indexOf(tier);
+
+          if (selectedTier !== 'all' && selectedTier !== tier) return null;
+
+          return (
+            <View 
+              key={tier}
+              style={[
+                styles.tierBenefit,
+                { borderColor: tierInfo.color },
+                isAvailable && { backgroundColor: tierInfo.color + '10' }
+              ]}
+            >
+              <Text style={[styles.tierName, { color: tierInfo.color }]}>
+                {tierInfo.displayName}
+              </Text>
+              <Text style={styles.benefitDescription}>
+                {benefit.tiers[tier].description}
+              </Text>
+              {isAvailable && (
+                <View style={[styles.availableBadge, { backgroundColor: tierInfo.color }]}>
+                  <Text style={styles.availableText}>사용 가능</Text>
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  ), [selectedTier, userNFTs]);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* 티어 정보 */}
-        {tierProgress && (
-          <View style={styles.tierContainer}>
-            <Text style={styles.tierTitle}>현재 티어: {TIERS[tierProgress.tier]?.displayName || 'Fan'}</Text>
-            <TierProgressBar progress={tierProgress.progress} />
-            <Text style={styles.tierPoints}>
-              {tierProgress.points} 포인트 / {tierProgress.nextTier ? `${tierProgress.requiredPoints} 포인트 필요` : '최고 티어'}
-            </Text>
-          </View>
-        )}
-        
-        {/* 혜택 목록 */}
-        <View style={styles.benefitsContainer}>
-          <Text style={styles.benefitsTitle}>사용 가능한 혜택</Text>
-          
-          {benefits.length > 0 ? (
-            <FlatList
-              data={benefits}
-              renderItem={renderBenefitCard}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
-            />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="gift-outline" size={40} color="#ccc" />
-              <Text style={styles.emptyText}>사용 가능한 혜택이 없습니다</Text>
-              <Text style={styles.emptySubText}>NFT를 획득하여 혜택을 받으세요</Text>
-            </View>
-          )}
-        </View>
-        
-        {/* 빠른 액세스 버튼 */}
-        <View style={styles.quickActionsContainer}>
-          <TouchableOpacity 
-            style={[styles.quickActionButton, { backgroundColor: artistInfo.primaryColor }]}
-            onPress={handleFansignPress}
-          >
-            <Ionicons name="create-outline" size={24} color="white" />
-            <Text style={styles.quickActionText}>팬사인회 응모</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.quickActionButton, { backgroundColor: artistInfo.secondaryColor }]}
-            onPress={handleConcertPress}
-          >
-            <Ionicons name="ticket-outline" size={24} color="white" />
-            <Text style={styles.quickActionText}>콘서트 예매</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.quickActionButton, { backgroundColor: artistInfo.accentColor }]}
-            onPress={handleExclusiveContentPress}
-          >
-            <Ionicons name="videocam-outline" size={24} color="white" />
-            <Text style={styles.quickActionText}>독점 콘텐츠</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.title}>NFT 혜택</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      {renderTierFilter()}
+
+      <AnimatedFlatList
+        data={benefits}
+        renderItem={renderBenefitItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+      />
     </SafeAreaView>
   );
 };
@@ -235,83 +199,103 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f8f8',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  tierContainer: {
-    backgroundColor: 'white',
-    padding: 16,
-    margin: 16,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  tierTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  tierPoints: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
-  },
-  benefitsContainer: {
-    padding: 16,
-  },
-  benefitsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    elevation: 1,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#666',
-    marginTop: 16,
-  },
-  emptySubText: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-  },
-  quickActionsContainer: {
+  header: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    marginBottom: 32,
-  },
-  quickActionButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginHorizontal: 4,
+    backgroundColor: 'white',
     elevation: 2,
   },
-  quickActionText: {
-    color: 'white',
+  backButton: {
+    padding: 8,
+  },
+  title: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 8,
+    color: '#333',
+  },
+  placeholder: {
+    width: 40,
+  },
+  tierFilterContainer: {
+    backgroundColor: 'white',
+    marginBottom: 8,
+  },
+  tierFilter: {
+    paddingVertical: 12,
+  },
+  tierFilterContent: {
+    paddingHorizontal: 8,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginHorizontal: 8,
+  },
+  filterButtonSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  filterButtonText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  filterButtonTextSelected: {
+    color: 'white',
+  },
+  content: {
+    padding: 16,
+  },
+  benefitCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+  },
+  benefitHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  benefitTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  tierBenefits: {
+    gap: 12,
+  },
+  tierBenefit: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+  },
+  tierName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  benefitDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  availableBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  availableText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

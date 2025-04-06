@@ -1,141 +1,160 @@
 // ArtistSelectionScreen.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
-  Dimensions,
-  Animated,
   FlatList,
-  StatusBar
+  Dimensions,
+  Alert,
+  Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useNFTContext } from '../contexts/NFTContext';
 import { ARTISTS } from '../constants/artists';
 import { COLORS } from '../constants/colors';
 import { ROUTES } from '../constants/navigation';
 
 const { width, height } = Dimensions.get('window');
-const ITEM_WIDTH = width;
-const ITEM_HEIGHT = height * 0.7;
-const SPACING = 0;
+const CARD_WIDTH = width * 0.8;
+const CARD_HEIGHT = height * 0.6;
+const SPACING = 20;
+
+// 애니메이션 FlatList 생성
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const ArtistSelectionScreen = ({ navigation }) => {
-  const [selectedArtist, setSelectedArtist] = useState(null);
+  const { setSelectedArtist } = useNFTContext();
+  const [selectedArtistId, setSelectedArtistId] = useState(null);
+  const flatListRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
 
-  const renderArtistCard = ({ item, index }) => {
+  const handleSelectArtist = useCallback((artistId) => {
+    setSelectedArtistId(artistId);
+  }, []);
+
+  const handleStart = useCallback(async () => {
+    if (!selectedArtistId) {
+      Alert.alert('알림', '아티스트를 선택해주세요.');
+      return;
+    }
+
+    try {
+      await setSelectedArtist(selectedArtistId);
+      navigation.replace(ROUTES.ARTIST_HOME, { 
+        artistId: selectedArtistId,
+        artist: ARTISTS[selectedArtistId]
+      });
+    } catch (error) {
+      console.error('아티스트 선택 오류:', error);
+      Alert.alert('오류', '아티스트 선택 중 오류가 발생했습니다.');
+    }
+  }, [selectedArtistId, setSelectedArtist, navigation]);
+
+  const renderArtistCard = useCallback(({ item: artist, index }) => {
     const inputRange = [
-      (index - 1) * width,
-      index * width,
-      (index + 1) * width
+      (index - 1) * CARD_WIDTH,
+      index * CARD_WIDTH,
+      (index + 1) * CARD_WIDTH,
     ];
 
     const scale = scrollX.interpolate({
       inputRange,
       outputRange: [0.9, 1, 0.9],
-      extrapolate: 'clamp'
+      extrapolate: 'clamp',
     });
 
     const opacity = scrollX.interpolate({
       inputRange,
       outputRange: [0.5, 1, 0.5],
-      extrapolate: 'clamp'
+      extrapolate: 'clamp',
     });
 
     return (
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={() => setSelectedArtist(item.id)}
+      <Animated.View
+        style={[
+          styles.cardContainer,
+          {
+            transform: [{ scale }],
+            opacity,
+          },
+        ]}
       >
-        <Animated.View
+        <TouchableOpacity
           style={[
             styles.artistCard,
-            {
-              transform: [{ scale }],
-              opacity
-            }
+            selectedArtistId === artist.id && styles.selectedCard
           ]}
+          onPress={() => handleSelectArtist(artist.id)}
+          activeOpacity={0.8}
         >
-          <Image
-            source={item.groupImage}
+          <Image 
+            source={artist.logo} 
+            style={styles.artistLogo}
+            resizeMode="contain"
+          />
+          <Image 
+            source={artist.groupImage} 
             style={styles.artistImage}
             resizeMode="cover"
           />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
-            style={styles.gradient}
-          >
-            <Image
-              source={item.logo}
-              style={styles.artistLogo}
-              resizeMode="contain"
-            />
-            <Text style={styles.artistDescription}>{item.description}</Text>
-          </LinearGradient>
-
-          {selectedArtist === item.id && (
-            <View style={[styles.selectedOverlay, { borderColor: item.primaryColor }]}>
-              <Text style={[styles.selectedText, { color: item.primaryColor }]}>선택됨</Text>
-            </View>
-          )}
-        </Animated.View>
-      </TouchableOpacity>
+          <View style={styles.artistInfo}>
+            <Text style={styles.artistName}>{artist.name}</Text>
+            <Text style={styles.artistDescription}>{artist.description}</Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
     );
-  };
+  }, [selectedArtistId, handleSelectArtist, scrollX]);
 
-  const handleStart = () => {
-    if (selectedArtist) {
-      navigation.replace(ROUTES.HOME, { artistId: selectedArtist });
-    }
-  };
+  const keyExtractor = useCallback((item) => item.id, []);
+
+  const getItemLayout = useCallback((data, index) => ({
+    length: CARD_WIDTH,
+    offset: CARD_WIDTH * index,
+    index,
+  }), []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      
       <View style={styles.header}>
         <Text style={styles.title}>K-POP NFT 리워드</Text>
         <Text style={styles.subtitle}>아티스트를 선택하세요</Text>
       </View>
 
-      <Animated.FlatList
+      <AnimatedFlatList
+        ref={flatListRef}
         data={Object.values(ARTISTS)}
-        keyExtractor={item => item.id}
+        renderItem={renderArtistCard}
+        keyExtractor={keyExtractor}
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={width}
+        snapToInterval={CARD_WIDTH}
         decelerationRate="fast"
-        snapToAlignment="center"
+        contentContainerStyle={styles.flatListContent}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: true }
         )}
-        renderItem={renderArtistCard}
-        contentContainerStyle={styles.flatListContent}
-        getItemLayout={(data, index) => ({
-          length: width,
-          offset: width * index,
-          index,
-        })}
+        getItemLayout={getItemLayout}
+        initialScrollIndex={0}
+        snapToAlignment="center"
+        pagingEnabled
       />
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.startButton,
-            !selectedArtist && styles.startButtonDisabled
-          ]}
-          onPress={handleStart}
-          disabled={!selectedArtist}
-        >
-          <Text style={styles.startButtonText}>
-            {selectedArtist ? '시작하기' : '아티스트를 선택해주세요'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={[
+          styles.startButton,
+          !selectedArtistId && styles.startButtonDisabled
+        ]}
+        onPress={handleStart}
+        disabled={!selectedArtistId}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.startButtonText}>시작하기</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -147,94 +166,83 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingVertical: 24,
+    padding: 24,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.primary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#999',
+    color: '#fff',
   },
   flatListContent: {
-    paddingHorizontal: 0,
+    paddingHorizontal: (width - CARD_WIDTH) / 2,
+    paddingVertical: 20,
+  },
+  cardContainer: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    marginHorizontal: SPACING / 2,
   },
   artistCard: {
-    width: ITEM_WIDTH,
-    height: ITEM_HEIGHT,
-    marginHorizontal: SPACING,
-    borderRadius: 24,
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: '#1a1a1a',
-    elevation: 5,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedCard: {
+    borderColor: COLORS.primary,
+    backgroundColor: `${COLORS.primary}20`,
+  },
+  artistLogo: {
+    height: 60,
+    width: '70%',
+    alignSelf: 'center',
+    marginTop: 20,
+    marginBottom: 10,
   },
   artistImage: {
     width: '100%',
-    height: '100%',
-    position: 'absolute',
+    height: CARD_HEIGHT * 0.5,
+    marginBottom: 10,
   },
-  gradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '50%',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 32,
-    paddingHorizontal: 20,
-  },
-  artistLogo: {
-    width: '70%',
-    height: 60,
-    marginBottom: 16,
-  },
-  artistDescription: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  selectedOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderWidth: 4,
-    borderRadius: 24,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
+  artistInfo: {
     padding: 16,
   },
-  selectedText: {
-    fontSize: 16,
+  artistName: {
+    fontSize: 24,
     fontWeight: 'bold',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  footer: {
-    paddingHorizontal: 32,
-    paddingVertical: 24,
+  artistDescription: {
+    fontSize: 14,
+    color: '#ccc',
+    textAlign: 'center',
   },
   startButton: {
+    position: 'absolute',
+    bottom: 24,
+    left: 24,
+    right: 24,
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   startButtonDisabled: {
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   startButtonText: {
     color: '#fff',
-    fontSize: 18,
     fontWeight: 'bold',
+    fontSize: 18,
   },
 });
 
