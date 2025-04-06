@@ -15,56 +15,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
 import { TIERS } from '../constants/tiers';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
 const NFTDetailsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { nft } = route.params;
-  const [isLoading, setIsLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
-
-  useEffect(() => {
-    if (nft) {
-      setIsLoading(false);
-    }
-  }, [nft]);
+  const nft = route.params?.nft;
+  const tierData = TIERS[nft?.tier || 'fan'];
 
   const handleImageLoad = () => {
     setImageLoading(false);
   };
 
-  const handleFusionPress = () => {
-    if (!nft) {
-      Alert.alert('오류', 'NFT 정보를 찾을 수 없습니다.');
-      return;
-    }
-    navigation.navigate('NFTFusion', { 
-      selectedNFT: nft,
-      tier: nft.tier,
-      artistId: nft.artistId
-    });
-  };
-
-  // 이미지 소스 처리 함수
   const getImageSource = (nft) => {
-    if (!nft || !nft.image) {
+    if (!nft?.image) {
       return require('../assets/images/placeholder.png');
     }
     return nft.image;
   };
 
-  if (isLoading) {
+  if (!nft) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>NFT 정보 로딩 중...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.loadingText}>NFT 정보를 불러올 수 없습니다.</Text>
+      </SafeAreaView>
     );
   }
-
-  const tierData = TIERS[nft.tier];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -93,50 +72,58 @@ const NFTDetailsScreen = () => {
           <View style={styles.headerContainer}>
             <Text style={styles.nftName}>{nft.name}</Text>
             <View style={[styles.tierBadge, { backgroundColor: tierData.color }]}>
-              <Text style={styles.tierText}>{tierData.displayName}</Text>
+              <Text style={styles.tierText}>{tierData.name}</Text>
             </View>
           </View>
 
           <View style={styles.pointsContainer}>
             <Text style={styles.pointsLabel}>현재 포인트</Text>
-            <Text style={styles.pointsValue}>{nft.currentPoints.toFixed(1)} P</Text>
+            <Text style={styles.pointsValue}>
+              {(nft.currentPoints || 0).toFixed(1)} P
+            </Text>
           </View>
 
           <View style={styles.descriptionContainer}>
             <Text style={styles.descriptionTitle}>NFT 설명</Text>
-            <Text style={styles.descriptionText}>{nft.description}</Text>
+            <Text style={styles.descriptionText}>{nft.description || '설명이 없습니다.'}</Text>
           </View>
 
-          <View style={styles.detailsContainer}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>아티스트</Text>
-              <Text style={styles.detailValue}>
-                {nft.artistId === 'gidle' ? '여자아이들' : 
-                 nft.artistId === 'bibi' ? '비비' : '이찬원'}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>구매 순번</Text>
-              <Text style={styles.detailValue}>{nft.initialSales}번</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>현재 판매량</Text>
-              <Text style={styles.detailValue}>{nft.currentSales.toLocaleString()}개</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>생성일</Text>
-              <Text style={styles.detailValue}>
-                {new Date(nft.createdAt).toLocaleDateString()}
-              </Text>
+          <View style={styles.benefitsContainer}>
+            <Text style={styles.benefitsTitle}>티어 혜택</Text>
+            <View style={styles.benefitsList}>
+              {Object.entries(tierData.benefits).map(([key, value], index) => {
+                let benefitText = '';
+                switch(key) {
+                  case 'fanSign':
+                    benefitText = `팬사인회 응모 ${value}회`;
+                    break;
+                  case 'concertPreorder':
+                    benefitText = `콘서트 ${value}시간 선예매`;
+                    break;
+                  case 'exclusiveContent':
+                    benefitText = value ? '독점 콘텐츠 접근 가능' : '';
+                    break;
+                  case 'winningRate':
+                    benefitText = `당첨 확률 ${value}배`;
+                    break;
+                }
+                if (!benefitText) return null;
+                return (
+                  <View key={index} style={styles.benefitItem}>
+                    <Ionicons name="checkmark-circle" size={20} color={tierData.color} />
+                    <Text style={styles.benefitText}>{benefitText}</Text>
+                  </View>
+                );
+              })}
             </View>
           </View>
 
-          {nft.canFuse && nft.tier !== 'founders' && (
+          {nft.canFuse && (
             <TouchableOpacity
               style={[styles.fusionButton, { backgroundColor: tierData.color }]}
-              onPress={handleFusionPress}
+              onPress={() => navigation.navigate('NFTFusion', { initialNFT: nft })}
             >
-              <Text style={styles.fusionButtonText}>합성하기</Text>
+              <Text style={styles.fusionButtonText}>NFT 합성하기</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -260,7 +247,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     lineHeight: 20,
   },
-  detailsContainer: {
+  benefitsContainer: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
@@ -277,21 +264,30 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  detailItem: {
+  benefitsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  benefitsList: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    flexWrap: 'wrap',
   },
-  detailLabel: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    borderRadius: 8,
+    marginRight: 8,
+    marginBottom: 8,
   },
-  detailValue: {
+  benefitText: {
     fontSize: 14,
     color: COLORS.text,
-    fontWeight: '500',
+    marginLeft: 8,
   },
   fusionButton: {
     paddingVertical: 16,

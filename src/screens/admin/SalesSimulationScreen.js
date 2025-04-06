@@ -240,9 +240,12 @@ const SalesSimulationScreen = ({ navigation }) => {
   
   useEffect(() => {
     if (userNFTs.length > 0 && !selectedNFT) {
-      setSelectedNFT(userNFTs[0]);
-      setSalesInput(userNFTs[0].currentSales.toString());
+      const initialNFT = userNFTs[0];
+      setSelectedNFT(initialNFT);
+      setSalesInput(initialNFT.currentSales?.toString() || '0');
+      pointsAnim.setValue(initialNFT.currentPoints || 0);
     }
+    setIsLoading(false);
   }, [userNFTs]);
   
   // NFT 이미지 가져오기
@@ -305,10 +308,11 @@ const SalesSimulationScreen = ({ navigation }) => {
   const runSimulation = () => {
     if (!selectedNFT) return;
     
-    const newSales = parseInt(salesInput) || selectedNFT.currentSales;
+    const newSales = parseInt(salesInput) || selectedNFT.currentSales || 0;
+    const currentSales = selectedNFT.currentSales || 0;
     
     // 판매량이 현재 판매량과 같으면 시뮬레이션 불필요
-    if (newSales === selectedNFT.currentSales) {
+    if (newSales === currentSales) {
       return;
     }
     
@@ -316,14 +320,14 @@ const SalesSimulationScreen = ({ navigation }) => {
     const comparisonData = Object.keys(TIERS).map(tier => {
       const result = calculateTierPointsIncrease(
         tier, 
-        selectedNFT.initialSales, 
-        selectedNFT.currentSales, 
+        selectedNFT.initialSales || 0, 
+        currentSales,
         newSales
       );
       
       return {
         tier,
-        name: TIERS[tier].displayName,
+        name: TIERS[tier].name,
         initialPoints: result.initialPoints,
         currentPoints: result.currentPoints,
         newPoints: result.newPoints,
@@ -341,7 +345,7 @@ const SalesSimulationScreen = ({ navigation }) => {
     
     // 시뮬레이션 결과 설정
     setSimulationResult({
-      initialSales: selectedNFT.currentSales,
+      initialSales: currentSales,
       newSales,
       initialPoints: selectedTierResult.currentPoints,
       newPoints: selectedTierResult.newPoints,
@@ -405,49 +409,68 @@ const SalesSimulationScreen = ({ navigation }) => {
     return points.toFixed(1);
   };
 
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>데이터를 불러오는 중...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!selectedNFT) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>시뮬레이션할 NFT가 없습니다.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <Text style={styles.title}>판매량-포인트 시뮬레이션</Text>
         
-        {selectedNFT && (
-          <View style={styles.nftContainer}>
-            <LinearGradient
-              colors={[TIERS[selectedNFT.tier].color + '40', TIERS[selectedNFT.tier].color + '80']}
-              style={styles.nftGradient}
-            >
-              <View style={styles.nftCard}>
-                <View style={styles.nftImageContainer}>
-                  <Image source={getFrameImage()} style={styles.frameImage} />
-                  <Image source={getNFTImage()} style={styles.nftImage} />
+        <View style={styles.nftContainer}>
+          <LinearGradient
+            colors={[TIERS[selectedNFT.tier].color + '40', TIERS[selectedNFT.tier].color + '80']}
+            style={styles.nftGradient}
+          >
+            <View style={styles.nftCard}>
+              <View style={styles.nftImageContainer}>
+                <Image source={getFrameImage()} style={styles.frameImage} />
+                <Image source={getNFTImage()} style={styles.nftImage} />
+              </View>
+              
+              <View style={styles.nftInfo}>
+                <View style={styles.tierBadge}>
+                  <Text style={styles.tierText}>
+                    {TIERS[selectedNFT.tier].name}
+                  </Text>
                 </View>
                 
-                <View style={styles.nftInfo}>
-                  <View style={styles.tierBadge}>
-                    <Text style={styles.tierText}>
-                      {TIERS[selectedNFT.tier].displayName}
-                    </Text>
-                  </View>
-                  
-                  <Text style={styles.nftTitle}>
-                    {selectedNFT.artistId === 'gidle' ? '여자아이들' :
-                     selectedNFT.artistId === 'bibi' ? '비비' : '이찬원'}
-                    {' - '}
-                    {getNFTName(selectedNFT.artistId, selectedNFT.memberId)}
-                  </Text>
-                  
-                  <Text style={styles.nftSubtitle}>
-                    구매 순번: #{selectedNFT.initialSales}
-                  </Text>
-                  
-                  <Animated.Text style={styles.pointsText}>
-                    현재 포인트: {selectedNFT.currentPoints.toFixed(1)}
-                  </Animated.Text>
-                </View>
+                <Text style={styles.nftTitle}>
+                  {selectedNFT.artistId === 'gidle' ? '여자아이들' :
+                   selectedNFT.artistId === 'bibi' ? '비비' : '이찬원'}
+                  {' - '}
+                  {getNFTName(selectedNFT.artistId, selectedNFT.memberId)}
+                </Text>
+                
+                <Text style={styles.nftSubtitle}>
+                  구매 순번: #{selectedNFT.initialSales || 0}
+                </Text>
+                
+                <Text style={styles.pointsText}>
+                  현재 포인트: {(selectedNFT.currentPoints || 0).toFixed(1)}
+                </Text>
               </View>
-            </LinearGradient>
-          </View>
-        )}
+            </View>
+          </LinearGradient>
+        </View>
 
         <View style={styles.simulationContainer}>
           <Text style={styles.sectionTitle}>판매량 설정</Text>
@@ -528,7 +551,6 @@ const SalesSimulationScreen = ({ navigation }) => {
               </View>
             </View>
             
-            {/* 티어별 비교 표 */}
             <Text style={styles.tableTitle}>티어별 포인트 비교</Text>
             <View style={styles.tableContainer}>
               <View style={styles.tableHeader}>
@@ -573,27 +595,6 @@ const SalesSimulationScreen = ({ navigation }) => {
                   </Text>
                 </View>
               ))}
-            </View>
-            
-            {/* 비즈니스 인사이트 */}
-            <View style={styles.insightsContainer}>
-              <Text style={styles.insightsTitle}>비즈니스 인사이트</Text>
-              
-              <View style={styles.insightItem}>
-                <Text style={styles.insightHeader}>초기 구매자 보상</Text>
-                <Text style={styles.insightText}>
-                  Founders 티어(1~100번)는 일반 Fan 티어(1000번 이후)보다 
-                  동일한 판매량 증가에도 최대 15배 높은 포인트 성장률을 가집니다.
-                </Text>
-              </View>
-              
-              <View style={styles.insightItem}>
-                <Text style={styles.insightHeader}>자발적 홍보 유도</Text>
-                <Text style={styles.insightText}>
-                  NFT 가치가 판매량과 연동되어 자동 상승함으로써, 
-                  팬들이 자발적으로 굿즈를 홍보하도록 동기를 부여합니다.
-                </Text>
-              </View>
             </View>
           </View>
         )}
@@ -883,6 +884,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
 });
 

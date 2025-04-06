@@ -199,45 +199,53 @@ const NFTFusionScreen = React.memo(({ route, navigation }) => {
               {selectedNFTs.map((nft) => (
                 <TouchableOpacity
                   key={nft.id}
-                  style={styles.nftCard}
+                  style={styles.selectedNFTCard}
                   onPress={() => handleDeselectNFT(nft)}
                 >
                   <Image
                     source={nft.image}
-                    style={styles.nftImage}
+                    style={styles.selectedNFTImage}
                     resizeMode="cover"
                   />
-                  <View style={styles.nftInfo}>
-                    <Text style={styles.nftName} numberOfLines={2}>{nft.name}</Text>
-                    <Text style={styles.nftPoints}>{nft.currentPoints?.toFixed(1) || '0.0'} P</Text>
+                  <View style={styles.selectedNFTOverlay}>
+                    <Ionicons name="close-circle" size={24} color="#fff" />
+                  </View>
+                  <View style={styles.selectedNFTInfo}>
+                    <Text style={styles.selectedNFTName} numberOfLines={1}>{nft.name}</Text>
+                    <Text style={styles.selectedNFTPoints}>{nft.currentPoints?.toFixed(1) || '0.0'} P</Text>
                   </View>
                 </TouchableOpacity>
               ))}
               {Array(3 - selectedNFTs.length).fill(null).map((_, index) => (
-                <View key={`empty-${index}`} style={[styles.nftCard, styles.emptyCard]}>
-                  <Text style={styles.emptyCardText}>NFT 선택</Text>
+                <View key={`empty-${index}`} style={[styles.selectedNFTCard, styles.emptyCard]}>
+                  <View style={styles.emptyCardContent}>
+                    <Ionicons name="add-circle-outline" size={32} color="#666" />
+                    <Text style={styles.emptyCardText}>NFT 선택</Text>
+                  </View>
                 </View>
               ))}
             </View>
           </View>
 
+          <View style={styles.divider} />
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>선택 가능한 NFT</Text>
-            <View style={styles.availableNFTsContainer}>
+            <View style={styles.availableNFTsGrid}>
               {availableNFTs.map((nft) => (
                 <TouchableOpacity
                   key={nft.id}
-                  style={styles.nftCard}
+                  style={styles.availableNFTCard}
                   onPress={() => handleSelectNFT(nft)}
                 >
                   <Image
                     source={nft.image}
-                    style={styles.nftImage}
+                    style={styles.availableNFTImage}
                     resizeMode="cover"
                   />
-                  <View style={styles.nftInfo}>
-                    <Text style={styles.nftName} numberOfLines={2}>{nft.name}</Text>
-                    <Text style={styles.nftPoints}>{nft.currentPoints?.toFixed(1) || '0.0'} P</Text>
+                  <View style={styles.availableNFTInfo}>
+                    <Text style={styles.availableNFTName} numberOfLines={1}>{nft.name}</Text>
+                    <Text style={styles.availableNFTPoints}>{nft.currentPoints?.toFixed(1) || '0.0'} P</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -265,7 +273,7 @@ const NFTFusionScreen = React.memo(({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#121212',
   },
   header: {
     flexDirection: 'row',
@@ -273,8 +281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#1A1A1A',
   },
   backButton: {
     padding: 8,
@@ -286,16 +293,6 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#fff',
-    marginTop: 16,
-    fontSize: 16,
   },
   scrollView: {
     flex: 1,
@@ -312,64 +309,123 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
   },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 24,
+  },
   selectedNFTsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    flexWrap: 'wrap',
+    gap: 12,
   },
-  availableNFTsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  nftCard: {
-    width: '31%',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
+  selectedNFTCard: {
+    flex: 1,
+    aspectRatio: 0.75,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 16,
+    elevation: 4,
+  },
+  selectedNFTImage: {
+    width: '100%',
+    height: '70%',
+  },
+  selectedNFTOverlay: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  selectedNFTInfo: {
+    padding: 12,
+    justifyContent: 'space-between',
+    height: '30%',
+  },
+  selectedNFTName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  selectedNFTPoints: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   emptyCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#1A1A1A',
     justifyContent: 'center',
     alignItems: 'center',
-    aspectRatio: 1,
+    borderWidth: 2,
+    borderColor: '#2A2A2A',
+    borderStyle: 'dashed',
+  },
+  emptyCardContent: {
+    alignItems: 'center',
+    gap: 8,
   },
   emptyCardText: {
     color: '#666',
-    fontSize: 12,
+    fontSize: 14,
   },
-  nftImage: {
+  availableNFTsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  availableNFTCard: {
+    width: '31%',
+    aspectRatio: 0.75,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  availableNFTImage: {
     width: '100%',
-    aspectRatio: 1,
+    height: '70%',
   },
-  nftInfo: {
+  availableNFTInfo: {
     padding: 8,
+    height: '30%',
+    justifyContent: 'space-between',
   },
-  nftName: {
+  availableNFTName: {
     color: '#fff',
     fontSize: 12,
-    marginBottom: 4,
+    fontWeight: '500',
   },
-  nftPoints: {
+  availableNFTPoints: {
     color: COLORS.primary,
     fontSize: 12,
     fontWeight: 'bold',
   },
   fusionButton: {
     backgroundColor: COLORS.primary,
-    padding: 16,
     margin: 16,
+    padding: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   fusionButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: '#2A2A2A',
   },
   fusionButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 16,
+    fontSize: 16,
   },
 });
 
