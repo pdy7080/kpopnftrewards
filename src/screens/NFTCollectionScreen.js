@@ -47,6 +47,8 @@ const NFTCollectionScreen = () => {
 
   // NFT를 티어별로 그룹화하는 로직
   const groupedNFTs = useMemo(() => {
+    if (!artistNFTs) return {};
+    
     return artistNFTs.reduce((acc, nft) => {
       if (!acc[nft.tier]) {
         acc[nft.tier] = [];
@@ -65,28 +67,32 @@ const NFTCollectionScreen = () => {
       Alert.alert('오류', 'NFT 정보를 찾을 수 없습니다.');
       return;
     }
+    
+    // 같은 티어의 NFT가 3개 이상 있는지 확인
+    const sameTierNFTs = artistNFTs.filter(
+      artistNft => artistNft.tier === nft.tier && artistNft.id !== nft.id
+    );
+    
+    if (sameTierNFTs.length < 2) {
+      Alert.alert('합성 불가', '같은 티어의 NFT가 충분하지 않아 합성할 수 없습니다.');
+      return;
+    }
+    
     navigation.navigate('NFTFusion', { 
       selectedNFT: nft,
       tier: nft.tier,
       artistId: nft.artistId
     });
-  }, [navigation]);
-
-  const handleImageLoad = useCallback((nftId) => {
-    setImageLoading(prev => ({
-      ...prev,
-      [nftId]: false
-    }));
-  }, []);
+  }, [artistNFTs, navigation]);
 
   const handleImageLoadStart = useCallback((nftId) => {
-    setImageLoading(prev => ({
-      ...prev,
-      [nftId]: true
-    }));
+    setImageLoading(prev => ({ ...prev, [nftId]: true }));
   }, []);
 
-  // 이미지 소스 처리 함수
+  const handleImageLoad = useCallback((nftId) => {
+    setImageLoading(prev => ({ ...prev, [nftId]: false }));
+  }, []);
+
   const getImageSource = useCallback((nft) => {
     if (!nft || !nft.image) {
       return require('../assets/images/placeholder.png');
@@ -96,20 +102,10 @@ const NFTCollectionScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>NFT 로딩 중...</Text>
-      </View>
-    );
-  }
-
-  if (!artistNFTs.length) {
-    return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            보유한 NFT가 없습니다.{'\n'}QR 스캔으로 NFT를 획득해보세요!
-          </Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>NFT를 불러오는 중...</Text>
         </View>
       </SafeAreaView>
     );
@@ -121,33 +117,57 @@ const NFTCollectionScreen = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        bounces={true}
-        overScrollMode="always"
       >
-        {Object.entries(TIERS).map(([tier, tierData]) => {
-          const tierNFTs = groupedNFTs[tier] || [];
-          const isSelected = selectedTier === tier;
+        <View style={styles.tierFilter}>
+          <TouchableOpacity
+            style={[
+              styles.tierButton,
+              !selectedTier && styles.selectedTierButton
+            ]}
+            onPress={() => setSelectedTier(null)}
+          >
+            <Text style={[
+              styles.tierButtonText,
+              !selectedTier && styles.selectedTierButtonText
+            ]}>전체</Text>
+          </TouchableOpacity>
           
-          return (
-            <View key={tier} style={styles.tierSection}>
+          {Object.entries(TIERS).map(([tier, tierData]) => {
+            const isSelected = selectedTier === tier;
+            const tierNFTs = groupedNFTs[tier] || [];
+            
+            return (
               <TouchableOpacity
+                key={tier}
                 style={[
-                  styles.tierHeader,
-                  { backgroundColor: tierData.color + '20' },
-                  isSelected && { backgroundColor: tierData.color + '40' }
+                  styles.tierButton,
+                  isSelected && styles.selectedTierButton,
+                  { borderColor: tierData.color }
                 ]}
                 onPress={() => setSelectedTier(isSelected ? null : tier)}
               >
-                <View style={styles.tierInfo}>
-                  <Text style={styles.tierTitle}>{tierData.displayName}</Text>
-                  <Text style={styles.tierCount}>{tierNFTs.length}개 보유</Text>
-                </View>
-                <View style={[styles.tierBadge, { backgroundColor: tierData.color }]}>
-                  <Text style={styles.tierBenefitText}>
-                    {tierData.benefits?.fanSigning || 0}회 응모 가능
-                  </Text>
-                </View>
+                <Text style={[
+                  styles.tierButtonText,
+                  isSelected && styles.selectedTierButtonText,
+                  { color: isSelected ? COLORS.white : tierData.color }
+                ]}>{tierData.name}</Text>
               </TouchableOpacity>
+            );
+          })}
+        </View>
+        
+        {Object.entries(TIERS).map(([tier, tierData]) => {
+          const isSelected = selectedTier === null || selectedTier === tier;
+          const tierNFTs = groupedNFTs[tier] || [];
+          
+          if (!isSelected || tierNFTs.length === 0) return null;
+          
+          return (
+            <View key={tier} style={styles.tierSection}>
+              <View style={styles.tierHeader}>
+                <Text style={styles.tierTitle}>{tierData.name}</Text>
+                <Text style={styles.tierCount}>{tierNFTs.length}개</Text>
+              </View>
               
               {(isSelected || !selectedTier) && (
                 <View style={styles.nftGrid}>
@@ -196,6 +216,12 @@ const NFTCollectionScreen = () => {
             </View>
           );
         })}
+        
+        {artistNFTs.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>보유한 NFT가 없습니다.</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -205,65 +231,75 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: COLORS.textSecondary,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 24,
+    padding: 16,
   },
-  loadingText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: COLORS.textSecondary,
+  tierFilter: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  tierButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  selectedTierButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  tierButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  selectedTierButtonText: {
+    color: COLORS.white,
   },
   tierSection: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   tierHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  tierInfo: {
-    flex: 1,
+    marginBottom: 12,
   },
   tierTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 4,
   },
   tierCount: {
     fontSize: 14,
     color: COLORS.textSecondary,
   },
-  tierBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  tierBenefitText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   nftGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 8,
+    justifyContent: 'space-between',
   },
   nftCard: {
     width: CARD_WIDTH,
-    margin: 8,
     backgroundColor: COLORS.white,
     borderRadius: 12,
+    marginBottom: 16,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
@@ -278,8 +314,8 @@ const styles = StyleSheet.create({
     }),
   },
   imageContainer: {
-    width: '100%',
-    height: CARD_WIDTH * 1.2,
+    width: CARD_WIDTH,
+    height: CARD_WIDTH,
     backgroundColor: '#f0f0f0',
     position: 'relative',
   },
@@ -306,7 +342,7 @@ const styles = StyleSheet.create({
   nftPoints: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
   fusionButton: {
     paddingVertical: 8,

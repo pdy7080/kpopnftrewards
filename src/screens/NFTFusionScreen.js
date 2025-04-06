@@ -146,20 +146,41 @@ const NFTFusionScreen = React.memo(({ route, navigation }) => {
               
               const nextTier = tierOrder[currentTierIndex + 1];
               
+              // 기존 NFT들의 평균 포인트 계산
+              const averagePoints = fusionNFTs.reduce((sum, nft) => sum + nft.currentPoints, 0) / fusionNFTs.length;
+              
+              // 새로운 NFT의 초기 포인트 계산 (평균 포인트 + 티어 보너스)
+              const tierBonus = {
+                supporter: 1.5,  // 50% 보너스
+                earlybird: 2,   // 100% 보너스
+                founders: 3     // 200% 보너스
+              };
+              
+              const initialPoints = averagePoints * (tierBonus[nextTier] || 1);
+              
               // 새로운 NFT 생성
               const newNFT = {
                 id: `nft_${Date.now()}`,
-                name: `${selectedArtist.name} ${nextTier.toUpperCase()} 티어 NFT`,
-                artistId: selectedArtist.id,
-                memberName: selectedNFT.memberName,
+                artistId: selectedArtist?.id,
+                memberId: selectedNFT.memberId,
+                name: `${selectedArtist?.name || ''} ${TIERS[nextTier].name} NFT`,
                 tier: nextTier,
-                image: selectedNFT.image, // 임시로 같은 이미지 사용
-                currentPoints: TIERS[nextTier].basePoints,
-                initialPoints: TIERS[nextTier].basePoints,
-                description: `${selectedArtist.name}의 ${nextTier.toUpperCase()} 티어 NFT입니다.`,
+                image: selectedNFT.image,
+                currentPoints: Number(initialPoints.toFixed(1)),
+                initialPoints: Number(initialPoints.toFixed(1)),
+                initialSales: selectedNFT.initialSales,
+                currentSales: selectedNFT.currentSales,
                 createdAt: new Date().toISOString(),
                 canFuse: nextTier !== 'founders',
-                fusionCount: 0
+                description: `${selectedArtist?.name || ''} ${TIERS[nextTier].name} NFT입니다.`,
+                fusionHistory: {
+                  parentNFTs: fusionNFTs.map(nft => ({
+                    id: nft.id,
+                    name: nft.name,
+                    tier: nft.tier
+                  })),
+                  fusionDate: new Date().toISOString()
+                }
               };
               
               // 기존 NFT 목록에서 합성된 NFT 제거
@@ -175,7 +196,7 @@ const NFTFusionScreen = React.memo(({ route, navigation }) => {
               
               Alert.alert(
                 "합성 성공",
-                `${nextTier.toUpperCase()} 티어 NFT가 생성되었습니다!`,
+                `${TIERS[nextTier].name} NFT가 생성되었습니다!\n현재 포인트: ${newNFT.currentPoints.toFixed(1)}`,
                 [
                   { 
                     text: "확인", 
