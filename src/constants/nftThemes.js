@@ -1,7 +1,42 @@
 // constants/nftThemes.js
 
-// 아티스트별 이벤트 및 컨셉 데이터
+// NFT 테마 및 이벤트 정의
 export const NFT_THEMES = {
+  WORLD_TOUR: {
+    name: '월드투어 기념',
+    description: '아티스트의 월드투어를 기념하여 제작된 한정판 기념주화입니다.',
+    rarity: 'rare'
+  },
+  FAN_MEETING: {
+    name: '팬미팅 한정판',
+    description: '팬미팅 참석자들을 위해 특별히 제작된 기념주화입니다.',
+    rarity: 'uncommon'
+  },
+  DEBUT: {
+    name: '데뷔 기념',
+    description: '아티스트의 데뷔를 기념하여 제작된 스페셜 에디션 기념주화입니다.',
+    rarity: 'legendary'
+  },
+  COMEBACK: {
+    name: '컴백 기념',
+    description: '새로운 앨범 발매를 기념하여 제작된 기념주화입니다.',
+    rarity: 'rare'
+  },
+  ALBUM: {
+    name: '앨범 발매 기념',
+    description: '앨범 발매를 기념하여 제작된 한정판 기념주화입니다.',
+    rarity: 'uncommon'
+  }
+};
+
+// NFT 설명 생성 함수
+export const generateNFTDescription = (theme, artist, edition) => {
+  const themeInfo = NFT_THEMES[theme];
+  return `${artist}의 ${themeInfo.name} 기념주화 NFT입니다. ${themeInfo.description} 전 세계 ${edition}개 한정 제작되었으며, 실물 주화 구매자에게만 제공되는 특별한 NFT입니다.`;
+};
+
+// 아티스트별 이벤트 및 컨셉 데이터
+export const NFT_THEMES_DATA = {
   gidle: [
     { name: "I-LAND 월드투어 기념 주화", desc: "여자아이들의 첫 월드투어 'I-LAND'를 기념하여 제작된 한정판 주화입니다." },
     { name: "네버랜드 5주년 기념 주화", desc: "데뷔 5주년을 맞이한 여자아이들의 성장을 기념하는 특별 제작 주화입니다." },

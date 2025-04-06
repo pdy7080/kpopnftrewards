@@ -90,19 +90,93 @@ const ArtistHomeScreen = ({ navigation, route }) => {
   
   // NFT 합성 메뉴 클릭 처리
   const handleNFTFusionPress = useCallback(() => {
-    if (artistNFTs.length < 3) {
+    const fanNFTs = artistNFTs?.filter(nft => nft.tier === 'fan') || [];
+    
+    if (fanNFTs.length < 3) {
       Alert.alert(
         '알림',
-        'NFT 합성을 위해서는 최소 3개의 NFT가 필요합니다.',
+        'NFT 합성을 위해서는 같은 티어의 NFT가 3개 이상 필요합니다.',
         [
-          { text: '취소', style: 'cancel' },
-          { text: 'NFT 컬렉션', onPress: () => handleMenuPress(ROUTES.NFT_COLLECTION) }
+          { text: '확인', style: 'cancel' },
+          { 
+            text: 'NFT 획득하기', 
+            onPress: () => handleMenuPress(ROUTES.QR_SCAN) 
+          }
         ]
       );
     } else {
-      handleMenuPress(ROUTES.NFT_FUSION);
+      navigation.navigate('NFTFusion', {
+        initialNFT: fanNFTs[0],
+        availableNFTs: fanNFTs,
+        artistId: selectedArtist?.id
+      });
     }
-  }, [artistNFTs, handleMenuPress]);
+  }, [artistNFTs, handleMenuPress, navigation, selectedArtist]);
+
+  // NFT 컬렉션 섹션 렌더링
+  const renderNFTCollection = useCallback(() => {
+    const nftCount = artistNFTs?.length || 0;
+    
+    return (
+      <TouchableOpacity
+        style={styles.section}
+        onPress={() => navigation.navigate('NFTCollection')}
+      >
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>NFT 컬렉션</Text>
+          <Text style={styles.sectionCount}>{nftCount}개</Text>
+        </View>
+        <View style={styles.nftPreview}>
+          {artistNFTs?.slice(0, 3).map((nft, index) => (
+            <View key={nft.id} style={styles.nftPreviewItem}>
+              <Image
+                source={nft.image || require('../assets/images/placeholder.png')}
+                style={styles.nftPreviewImage}
+              />
+            </View>
+          ))}
+          {nftCount > 3 && (
+            <View style={styles.nftPreviewMore}>
+              <Text style={styles.nftPreviewMoreText}>+{nftCount - 3}</Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  }, [artistNFTs, navigation]);
+
+  // NFT 합성 버튼 렌더링
+  const renderFusionButton = useCallback(() => {
+    const fanNFTs = artistNFTs?.filter(nft => nft.tier === 'fan') || [];
+    const canFuse = fanNFTs.length >= 3;
+    
+    const handleFusionPress = () => {
+      if (canFuse) {
+        navigation.navigate('NFTFusion', {
+          initialNFT: fanNFTs[0],
+          availableNFTs: fanNFTs,
+          artistId: selectedArtist?.id
+        });
+      } else {
+        Alert.alert(
+          '합성 불가',
+          '같은 티어의 NFT가 3개 이상 필요합니다.\nNFT를 더 수집해보세요!'
+        );
+      }
+    };
+    
+    return (
+      <TouchableOpacity
+        style={[styles.fusionButton, !canFuse && styles.fusionButtonDisabled]}
+        onPress={handleFusionPress}
+        disabled={!canFuse}
+      >
+        <Text style={styles.fusionButtonText}>
+          NFT 합성하기 {canFuse ? `(${fanNFTs.length}개)` : ''}
+        </Text>
+      </TouchableOpacity>
+    );
+  }, [artistNFTs, navigation, selectedArtist]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -193,6 +267,9 @@ const ArtistHomeScreen = ({ navigation, route }) => {
             <Text style={styles.menuDescription}>팬사인회/콘서트</Text>
           </TouchableOpacity>
         </View>
+
+        {renderNFTCollection()}
+        {renderFusionButton()}
       </ScrollView>
     </SafeAreaView>
   );
@@ -279,6 +356,70 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#fff',
     fontSize: 10,
+    fontWeight: 'bold',
+  },
+  section: {
+    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  sectionCount: {
+    color: '#ccc',
+    fontSize: 12,
+  },
+  nftPreview: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  nftPreviewItem: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 8,
+    overflow: 'hidden',
+    backgroundColor: COLORS.background,
+  },
+  nftPreviewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  nftPreviewMore: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: COLORS.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nftPreviewMoreText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  fusionButtonDisabled: {
+    opacity: 0.5,
+  },
+  fusionButton: {
+    backgroundColor: COLORS.primary,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  fusionButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

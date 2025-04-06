@@ -100,6 +100,56 @@ const NFTCollectionScreen = () => {
     return nft.image;
   }, []);
 
+  // NFT 카드 렌더링 부분 수정
+  const renderNFTCard = useCallback((nft) => {
+    const tierData = TIERS[nft.tier];
+    
+    return (
+      <TouchableOpacity
+        key={nft.id}
+        style={[
+          styles.nftCard,
+          { borderColor: tierData.color }
+        ]}
+        onPress={() => handleNFTPress(nft)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.imageContainer}>
+          {imageLoading[nft.id] && (
+            <ActivityIndicator 
+              style={styles.imageLoader} 
+              size="small" 
+              color={COLORS.primary} 
+            />
+          )}
+          <Image 
+            source={getImageSource(nft)}
+            style={styles.nftImage}
+            resizeMode="cover"
+            onLoadStart={() => handleImageLoadStart(nft.id)}
+            onLoad={() => handleImageLoad(nft.id)}
+          />
+        </View>
+        <View style={styles.nftInfo}>
+          <Text style={styles.nftName} numberOfLines={2}>
+            {nft.name}
+          </Text>
+          <Text style={styles.nftPoints}>
+            {nft.currentPoints ? nft.currentPoints.toFixed(1) : '0.0'} P
+          </Text>
+        </View>
+        {nft.canFuse && groupedNFTs[nft.tier]?.length >= 3 && nft.tier !== 'founders' && (
+          <TouchableOpacity
+            style={[styles.fusionButton, { backgroundColor: tierData.color }]}
+            onPress={() => handleFusionPress(nft)}
+          >
+            <Text style={styles.fusionButtonText}>합성하기</Text>
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
+    );
+  }, [handleNFTPress, imageLoading, getImageSource, handleImageLoadStart, handleImageLoad, handleFusionPress, groupedNFTs]);
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -169,50 +219,9 @@ const NFTCollectionScreen = () => {
                 <Text style={styles.tierCount}>{tierNFTs.length}개</Text>
               </View>
               
-              {(isSelected || !selectedTier) && (
-                <View style={styles.nftGrid}>
-                  {tierNFTs.map((nft) => (
-                    <TouchableOpacity
-                      key={nft.id}
-                      style={styles.nftCard}
-                      onPress={() => handleNFTPress(nft)}
-                    >
-                      <View style={styles.imageContainer}>
-                        {imageLoading[nft.id] && (
-                          <ActivityIndicator 
-                            style={styles.imageLoader} 
-                            size="small" 
-                            color={COLORS.primary} 
-                          />
-                        )}
-                        <Image 
-                          source={getImageSource(nft)}
-                          style={styles.nftImage}
-                          resizeMode="cover"
-                          onLoadStart={() => handleImageLoadStart(nft.id)}
-                          onLoad={() => handleImageLoad(nft.id)}
-                        />
-                      </View>
-                      <View style={styles.nftInfo}>
-                        <Text style={styles.nftName} numberOfLines={2}>
-                          {nft.name}
-                        </Text>
-                        <Text style={styles.nftPoints}>
-                          {nft.currentPoints.toFixed(1)} P
-                        </Text>
-                      </View>
-                      {nft.canFuse && tierNFTs.length >= 3 && tier !== 'founders' && (
-                        <TouchableOpacity
-                          style={[styles.fusionButton, { backgroundColor: tierData.color }]}
-                          onPress={() => handleFusionPress(nft)}
-                        >
-                          <Text style={styles.fusionButtonText}>합성하기</Text>
-                        </TouchableOpacity>
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
+              <View style={styles.nftGrid}>
+                {tierNFTs.map(renderNFTCard)}
+              </View>
             </View>
           );
         })}
