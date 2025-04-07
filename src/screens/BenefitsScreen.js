@@ -83,6 +83,27 @@ const BenefitsScreen = ({ navigation }) => {
     }
   };
 
+  // 사용자의 최고 티어 확인
+  const getUserHighestTier = () => {
+    if (!userNFTs || userNFTs.length === 0) return null;
+    
+    const tiers = ['fan', 'supporter', 'earlybird', 'founders'];
+    let highestTier = 'fan';
+    
+    userNFTs.forEach(nft => {
+      const tierIndex = tiers.indexOf(nft.tier);
+      const highestTierIndex = tiers.indexOf(highestTier);
+      
+      if (tierIndex > highestTierIndex) {
+        highestTier = nft.tier;
+      }
+    });
+    
+    return highestTier;
+  };
+
+  const userHighestTier = getUserHighestTier();
+
   // 혜택 데이터
   const benefits = [
     {
@@ -98,13 +119,13 @@ const BenefitsScreen = ({ navigation }) => {
     },
     {
       id: 'concert',
-      title: '콘서트 응모',
+      title: '콘서트 우선 예매',
       icon: 'musical-notes',
       tiers: {
-        fan: { count: 1, description: '1회 응모 가능' },
-        supporter: { count: 3, description: '3회 응모 가능' },
-        earlybird: { count: 5, description: '5회 응모 가능' },
-        founders: { count: 10, description: '10회 응모 가능' }
+        fan: { time: 0, description: '일반 예매' },
+        supporter: { time: 12, description: '12시간 전 예매' },
+        earlybird: { time: 24, description: '24시간 전 예매' },
+        founders: { time: 48, description: '48시간 전 예매' }
       }
     },
     {
@@ -128,12 +149,13 @@ const BenefitsScreen = ({ navigation }) => {
 
   // 혜택 사용 가능 여부 확인
   const isBenefitAvailable = (benefit, tier) => {
-    if (!userHighestTier) return false;
+    if (!userNFTs || userNFTs.length === 0) return false;
     
-    const tierOrder = ['founders', 'earlybird', 'supporter', 'fan'];
+    const tierOrder = ['fan', 'supporter', 'early_bird', 'founders'];
     const userTierIndex = tierOrder.indexOf(userHighestTier);
     const benefitTierIndex = tierOrder.indexOf(tier);
     
+    // 사용자의 티어가 해당 혜택의 티어보다 낮으면 사용 불가
     if (userTierIndex < benefitTierIndex) return false;
     
     // 티어 정보가 존재하는지 확인
@@ -151,6 +173,28 @@ const BenefitsScreen = ({ navigation }) => {
 
   // 혜택 신청 처리
   const handleApplyBenefit = (benefit, tier) => {
+    // 사용자의 티어가 해당 혜택을 사용할 수 있는지 확인
+    if (!isBenefitAvailable(benefit, tier)) {
+      const tierOrder = ['fan', 'supporter', 'early_bird', 'founders'];
+      const userTierIndex = tierOrder.indexOf(userHighestTier);
+      const benefitTierIndex = tierOrder.indexOf(tier);
+      
+      if (userTierIndex < benefitTierIndex) {
+        Alert.alert(
+          '신청 불가',
+          '현재 티어에서는 이 혜택을 신청할 수 없습니다. 상위 티어의 NFT를 획득하여 더 많은 혜택을 받아보세요!',
+          [{ text: '확인' }]
+        );
+      } else {
+        Alert.alert(
+          '신청 불가',
+          '이미 최대 사용 횟수를 초과했습니다.',
+          [{ text: '확인' }]
+        );
+      }
+      return;
+    }
+    
     if (benefit.id === 'fansign') {
       navigation.navigate(ROUTES.FANSIGN_APPLICATION, {
         tier,
@@ -203,104 +247,156 @@ const BenefitsScreen = ({ navigation }) => {
         </View>
       );
     }
-
-    const tierInfo = TIERS[userHighestTier] || TIERS.fan;
+    
+    const tierInfo = TIERS[userHighestTier];
     
     return (
-      <View style={[styles.currentTierContainer, { backgroundColor: tierInfo.color + '10' }]}>
-        <View style={[styles.tierBadge, { backgroundColor: tierInfo.color }]}>
-          <Text style={styles.tierBadgeText}>{tierInfo.displayName}</Text>
-        </View>
-        <Text style={styles.currentTierTitle}>현재 티어: {tierInfo.displayName}</Text>
-        <Text style={styles.currentTierDescription}>{tierInfo.description}</Text>
-      </View>
-    );
-  };
-
-  // 티어 필터 렌더링
-  const renderTierFilter = () => {
-    const tiers = [
-      { id: 'all', name: '전체', color: COLORS.primary },
-      { id: 'founders', name: '파운더스', color: TIERS.founders?.color || '#FFD700' },
-      { id: 'earlybird', name: '얼리버드', color: TIERS.earlybird?.color || '#FF9800' },
-      { id: 'supporter', name: '서포터', color: TIERS.supporter?.color || '#4CAF50' },
-      { id: 'fan', name: '팬', color: TIERS.fan?.color || '#2196F3' }
-    ];
-
-    return (
-      <View style={styles.tierFilterContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {tiers.map(tier => (
-            <TouchableOpacity
-              key={tier.id}
-              style={[
-                styles.tierFilterButton,
-                { borderColor: tier.color },
-                selectedTier === tier.id && { backgroundColor: tier.color }
-              ]}
-              onPress={() => setSelectedTier(tier.id)}
-            >
-              <Text
-                style={[
-                  styles.tierFilterText,
-                  { color: tier.color },
-                  selectedTier === tier.id && { color: 'white' }
-                ]}
-              >
-                {tier.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    );
-  };
-
-  // 혜택 카드 렌더링
-  const renderBenefitCard = ({ item: benefit }) => {
-    const tier = selectedTier === 'all' ? userHighestTier : selectedTier;
-    const isAvailable = isBenefitAvailable(benefit, tier);
-    const tierInfo = TIERS[tier] || TIERS.fan; // 기본값으로 fan 티어 사용
-    const usedCount = getBenefitUsageCount(benefit.id, tier);
-    const maxCount = benefit.tiers[tier]?.count || 0;
-    
-    return (
-      <View style={styles.benefitCard} key={benefit.id}>
-        <View style={styles.benefitHeader}>
-          <Ionicons name={benefit.icon} size={24} color={tierInfo.color} />
-          <Text style={styles.benefitTitle}>{benefit.title}</Text>
-        </View>
-        
-        <Text style={styles.benefitDescription}>
-          {benefit.tiers[tier]?.description || '해당 티어에서 이용할 수 없는 혜택입니다.'}
-        </Text>
-        
-        {(benefit.id === 'fansign' || benefit.id === 'concert') && (
-          <View style={styles.usageInfo}>
-            <Text style={styles.usageText}>
-              사용: {usedCount} / {maxCount}회
-            </Text>
-            <Text style={[styles.remainingText, { color: tierInfo.color }]}>
-              남은 횟수: {maxCount - usedCount}회
+      <View style={[styles.currentTierContainer, { borderColor: tierInfo.color }]}>
+        <View style={styles.currentTierHeader}>
+          <View style={styles.currentTierInfo}>
+            <Text style={styles.currentTierLabel}>현재 티어</Text>
+            <Text style={[styles.currentTierTitle, { color: tierInfo.color }]}>
+              {tierInfo.displayName}
             </Text>
           </View>
-        )}
-        
-        <TouchableOpacity
-          style={[
-            styles.applyButton,
-            { backgroundColor: isAvailable ? tierInfo.color : '#ccc' }
-          ]}
-          onPress={() => handleApplyBenefit(benefit, tier)}
-          disabled={!isAvailable}
-        >
-          <Text style={styles.applyButtonText}>
-            {isAvailable ? '신청하기' : '이용 불가'}
-          </Text>
-        </TouchableOpacity>
+          <View style={[styles.tierBadge, { backgroundColor: tierInfo.color }]}>
+            <Text style={styles.tierBadgeText}>{tierInfo.displayName}</Text>
+          </View>
+        </View>
+        <Text style={styles.currentTierDescription}>
+          {tierInfo.description}
+        </Text>
       </View>
     );
   };
+
+  const renderTierFilter = useCallback(() => (
+    <View style={styles.tierFilterContainer}>
+      <ScrollView 
+        horizontal 
+        style={styles.tierFilter}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tierFilterContent}
+      >
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            selectedTier === 'all' && styles.filterButtonSelected
+          ]}
+          onPress={() => setSelectedTier('all')}
+        >
+          <Text style={[
+            styles.filterButtonText,
+            selectedTier === 'all' && styles.filterButtonTextSelected
+          ]}>전체 보기</Text>
+        </TouchableOpacity>
+
+        {Object.entries(TIERS).map(([tier, tierInfo]) => (
+          <TouchableOpacity
+            key={tier}
+            style={[
+              styles.filterButton,
+              selectedTier === tier && styles.filterButtonSelected,
+              { borderColor: tierInfo.color }
+            ]}
+            onPress={() => setSelectedTier(tier)}
+          >
+            <Text style={[
+              styles.filterButtonText,
+              { color: tierInfo.color },
+              selectedTier === tier && styles.filterButtonTextSelected
+            ]}>{tierInfo.displayName}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  ), [selectedTier]);
+
+  const renderBenefitItem = useCallback(({ item: benefit }) => (
+    <View style={styles.benefitCard}>
+      <View style={styles.benefitHeader}>
+        <View style={styles.benefitIconContainer}>
+          <Ionicons name={benefit.icon} size={24} color={COLORS.primary} />
+        </View>
+        <View style={styles.benefitTitleContainer}>
+          <Text style={styles.benefitTitle}>{benefit.title}</Text>
+          <Text style={styles.benefitSubtitle}>{benefit.description}</Text>
+        </View>
+      </View>
+
+      <View style={styles.tierBenefits}>
+        {Object.entries(TIERS).map(([tier, tierInfo]) => {
+          if (!benefit.tiers || !benefit.tiers[tier]) return null;
+          
+          const isAvailable = isBenefitAvailable(benefit, tier);
+          const usedCount = getBenefitUsageCount(benefit.id, tier);
+          const maxCount = benefit.tiers[tier].count || 0;
+          const remainingCount = maxCount - usedCount;
+
+          if (selectedTier !== 'all' && selectedTier !== tier) return null;
+
+          return (
+            <View 
+              key={tier}
+              style={[
+                styles.tierBenefit,
+                { borderColor: tierInfo.color },
+                isAvailable && { backgroundColor: tierInfo.color + '10' }
+              ]}
+            >
+              <View style={styles.tierBenefitHeader}>
+                <View style={[styles.tierBadge, { backgroundColor: tierInfo.color }]}>
+                  <Text style={styles.tierBadgeText}>{tierInfo.displayName}</Text>
+                </View>
+                {isAvailable && (
+                  <View style={[styles.availableBadge, { backgroundColor: tierInfo.color }]}>
+                    <Text style={styles.availableText}>사용 가능</Text>
+                  </View>
+                )}
+              </View>
+
+              <Text style={styles.benefitDescription}>
+                {benefit.tiers[tier].description}
+              </Text>
+              
+              {(benefit.id === 'fansign' || benefit.id === 'concert') && (
+                <View style={styles.usageContainer}>
+                  <View style={styles.usageProgress}>
+                    <View 
+                      style={[
+                        styles.usageProgressBar,
+                        { 
+                          width: `${(usedCount / maxCount) * 100}%`,
+                          backgroundColor: tierInfo.color
+                        }
+                      ]} 
+                    />
+                  </View>
+                  <View style={styles.usageInfo}>
+                    <Text style={styles.usageText}>
+                      사용: {usedCount} / {maxCount}회
+                    </Text>
+                    <Text style={[styles.remainingText, { color: tierInfo.color }]}>
+                      남은 횟수: {remainingCount}회
+                    </Text>
+                  </View>
+                </View>
+              )}
+              
+              {isAvailable && (
+                <TouchableOpacity
+                  style={[styles.applyButton, { backgroundColor: tierInfo.color }]}
+                  onPress={() => handleApplyBenefit(benefit, tier)}
+                >
+                  <Text style={styles.applyButtonText}>신청하기</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  ), [selectedTier, userNFTs, benefitUsage]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -333,9 +429,19 @@ const BenefitsScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>혜택 신청</Text>
-            <Text style={styles.modalDescription}>
-              {selectedBenefit?.benefit.title} 혜택을 신청하시겠습니까?
-            </Text>
+            {selectedBenefit && (
+              <>
+                <Text style={styles.modalText}>
+                  {selectedBenefit.benefit.title} 혜택을 신청하시겠습니까?
+                </Text>
+                <Text style={styles.modalDetailText}>
+                  티어: {TIERS[selectedBenefit.tier].displayName}
+                </Text>
+                <Text style={styles.modalDetailText}>
+                  {selectedBenefit.benefit.tiers[selectedBenefit.tier].description}
+                </Text>
+              </>
+            )}
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
@@ -388,6 +494,31 @@ const styles = StyleSheet.create({
     margin: 16,
     padding: 16,
     borderRadius: 12,
+    borderWidth: 2,
+    elevation: 2,
+  },
+  currentTierHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  currentTierInfo: {
+    flex: 1,
+  },
+  currentTierLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  currentTierTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  currentTierDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
   tierBadge: {
     alignSelf: 'flex-start',
@@ -406,29 +537,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  currentTierDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+  tierFilter: {
+    paddingVertical: 12,
   },
-  tierFilterContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
+  tierFilterContent: {
+    paddingHorizontal: 8,
   },
   tierFilterButton: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: 'white',
-    marginRight: 8,
-    borderWidth: 2,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginHorizontal: 8,
   },
-  tierFilterText: {
+  filterButtonSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  filterButtonText: {
+    color: '#666',
     fontSize: 14,
-    fontWeight: 'bold',
   },
-  benefitsContainer: {
+  filterButtonTextSelected: {
+    color: 'white',
+  },
+  content: {
     padding: 16,
   },
   benefitCard: {
@@ -469,9 +607,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   applyButton: {
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 8,
   },
   applyButtonText: {
     color: 'white',
