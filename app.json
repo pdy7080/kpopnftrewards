@@ -25,7 +25,10 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.dcclab.KpopNftRewards"
+      "package": "com.dcclab.KpopNftRewards",
+      "versionCode": 2,
+      "permissions": [],
+      "buildType": "apk"
     },
     "web": {
       "bundler": "metro",
