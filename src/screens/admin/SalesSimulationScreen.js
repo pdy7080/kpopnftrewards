@@ -236,7 +236,7 @@ const getNFTName = (artistId, eventIndex = 0) => {
   return `${events[eventIndex % events.length]} NFT`;
 };
 
-const SalesSimulationScreen = ({ navigation }) => {
+const SalesSimulationScreen = ({ navigation, route }) => {
   const { userNFTs } = useNFTContext();
   const [selectedNFT, setSelectedNFT] = useState(null);
   const [salesInput, setSalesInput] = useState('');
@@ -244,16 +244,21 @@ const SalesSimulationScreen = ({ navigation }) => {
   const pointsAnim = useRef(new Animated.Value(0)).current;
   const [tierComparisonData, setTierComparisonData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showNFTSelector, setShowNFTSelector] = useState(false);
+  
+  // 현재 선택된 아티스트의 NFT만 필터링
+  const currentArtistId = route.params?.artistId || 'gidle';
+  const filteredNFTs = userNFTs.filter(nft => nft.artistId === currentArtistId);
   
   useEffect(() => {
-    if (userNFTs.length > 0 && !selectedNFT) {
-      const initialNFT = userNFTs[0];
+    if (filteredNFTs.length > 0 && !selectedNFT) {
+      const initialNFT = filteredNFTs[0];
       setSelectedNFT(initialNFT);
       setSalesInput(initialNFT.currentSales?.toString() || '0');
       pointsAnim.setValue(initialNFT.currentPoints || 0);
     }
     setIsLoading(false);
-  }, [userNFTs]);
+  }, [filteredNFTs]);
   
   // NFT 이미지 가져오기 함수 수정
   const getNFTImage = () => {
@@ -506,6 +511,49 @@ const SalesSimulationScreen = ({ navigation }) => {
     );
   };
 
+  // NFT 선택 모달에서도 필터링된 NFT 사용
+  const renderNFTSelector = () => (
+    <Modal
+      visible={showNFTSelector}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setShowNFTSelector(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>
+            {currentArtistId === 'gidle' ? '여자아이들' :
+             currentArtistId === 'bibi' ? '비비' : '이찬원'} NFT 선택
+          </Text>
+          
+          <FlatList
+            data={filteredNFTs}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.nftSelectItem}
+                onPress={() => {
+                  setSelectedNFT(item);
+                  setSalesInput(item.currentSales?.toString() || '0');
+                  setShowNFTSelector(false);
+                }}
+              >
+                <NFTCard nft={item} size="small" />
+              </TouchableOpacity>
+            )}
+          />
+          
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowNFTSelector(false)}
+          >
+            <Text style={styles.closeButtonText}>닫기</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -701,6 +749,7 @@ const SalesSimulationScreen = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
+      {renderNFTSelector()}
     </SafeAreaView>
   );
 };
@@ -1007,6 +1056,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 20,
+    width: '80%',
+    maxHeight: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+  },
+  nftSelectItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  closeButton: {
+    backgroundColor: COLORS.primary,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

@@ -136,6 +136,35 @@ const AdminDashboardScreen = ({ navigation }) => {
     );
   }, [isLoading]);
   
+  // 테스트 데이터 생성 처리
+  const handleGenerateTestData = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    
+    try {
+      const result = await generateAllTestData();
+      
+      if (result.success) {
+        Alert.alert(
+          '성공', 
+          result.message || '테스트 데이터가 생성되었습니다.',
+          [{ text: '확인', onPress: () => setIsLoading(false) }]
+        );
+      } else {
+        throw new Error(result.error || '데이터 생성 실패');
+      }
+    } catch (error) {
+      console.error('테스트 데이터 생성 오류:', error);
+      Alert.alert(
+        '오류', 
+        `테스트 데이터 생성 중 오류가 발생했습니다: ${error.message}`,
+        [{ text: '확인', onPress: () => setIsLoading(false) }]
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // 홈 화면으로 안전하게 이동
   const handleGoBack = () => {
     try {
@@ -166,28 +195,50 @@ const AdminDashboardScreen = ({ navigation }) => {
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>관리자 기능</Text>
-          <TouchableOpacity
-            style={[styles.menuItem, isLoading && styles.disabledMenuItem]}
-            onPress={() => navigation.navigate('SalesSimulation')}
-            disabled={isLoading}
-          >
-            <Ionicons name="analytics-outline" size={24} color={COLORS.primary} style={styles.menuItemIcon} />
-            <View style={styles.menuItemContent}>
-              <Text style={styles.menuItemText}>판매량-포인트 시뮬레이션</Text>
-              <Text style={styles.menuItemDescription}>NFT 가치 성장 메커니즘을 시연합니다.</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.menuItem, isLoading && styles.disabledMenuItem]}
-            onPress={handleResetData}
-            disabled={isLoading}
-          >
-            <Ionicons name="trash-outline" size={24} color={COLORS.error} style={styles.menuItemIcon} />
-            <View style={styles.menuItemContent}>
-              <Text style={[styles.menuItemText, { color: COLORS.error }]}>데이터 초기화</Text>
-              <Text style={styles.menuItemDescription}>모든 NFT와 사용 내역을 삭제합니다.</Text>
-            </View>
-          </TouchableOpacity>
+          <View style={styles.menuContainer}>
+            <Text style={styles.sectionTitle}>판매량-포인트 시뮬레이션</Text>
+            
+            {/* 아티스트별 시뮬레이션 메뉴 */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('SalesSimulation', { artistId: 'gidle' })}
+            >
+              <Text style={styles.menuItemTitle}>여자아이들 NFT 시뮬레이션</Text>
+              <Text style={styles.menuItemDescription}>
+                여자아이들 NFT의 판매량에 따른 포인트 변화를 시뮬레이션합니다.
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('SalesSimulation', { artistId: 'bibi' })}
+            >
+              <Text style={styles.menuItemTitle}>비비 NFT 시뮬레이션</Text>
+              <Text style={styles.menuItemDescription}>
+                비비 NFT의 판매량에 따른 포인트 변화를 시뮬레이션합니다.
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('SalesSimulation', { artistId: 'chanwon' })}
+            >
+              <Text style={styles.menuItemTitle}>이찬원 NFT 시뮬레이션</Text>
+              <Text style={styles.menuItemDescription}>
+                이찬원 NFT의 판매량에 따른 포인트 변화를 시뮬레이션합니다.
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.menuItem, styles.dangerMenuItem]}
+              onPress={handleResetData}
+            >
+              <Text style={styles.menuItemTitle}>데이터 초기화</Text>
+              <Text style={styles.menuItemDescription}>
+                모든 NFT와 혜택 사용 내역을 삭제합니다.
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
         
         <View style={styles.section}>
@@ -280,6 +331,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#333',
   },
+  menuContainer: {
+    marginBottom: 16,
+  },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -289,13 +343,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     elevation: 2,
   },
-  menuItemIcon: {
-    marginRight: 16,
-  },
-  menuItemContent: {
-    flex: 1,
-  },
-  menuItemText: {
+  menuItemTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.primary,
@@ -382,7 +430,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-  }
+  },
+  dangerMenuItem: {
+    backgroundColor: COLORS.error,
+  },
 });
 
 export default AdminDashboardScreen;

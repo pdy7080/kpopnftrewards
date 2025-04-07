@@ -134,42 +134,36 @@ const NFT_STORAGE_KEY = (userId = DEFAULT_USER_ID) => `user_nfts_${userId}`;
 const createNFT = (artistId, eventIndex, tier = 'fan', memberIndex = 0) => {
   try {
     const artist = ARTISTS[artistId];
-    if (!artist) {
+    const artistData = ARTIST_NFT_DATA[artistId];
+    
+    if (!artist || !artistData) {
       console.error(`Invalid artist ID: ${artistId}`);
       return null;
     }
     
-    // 티어별 구매 순번 범위
-    const purchaseOrderRanges = {
-      founders: { min: 1, max: 100 },
-      earlybird: { min: 101, max: 500 },
-      supporter: { min: 501, max: 1000 },
-      fan: { min: 1001, max: 5000 }
-    };
-
-    const range = purchaseOrderRanges[tier];
+    // 티어별 구매 순번 범위 (Fan 티어만 사용)
+    const purchaseOrderRange = { min: 1001, max: 5000 };
     
     // 구매 순번 생성
     const initialSales = Math.floor(
-      Math.random() * (range.max - range.min + 1)
-    ) + range.min;
+      Math.random() * (purchaseOrderRange.max - purchaseOrderRange.min + 1)
+    ) + purchaseOrderRange.min;
     
     // 현재 판매량 설정 (구매 순번 + 랜덤 추가 판매량)
     const additionalSales = Math.floor(Math.random() * 10000);
     const currentSales = initialSales + additionalSales;
     
     // 이벤트 정보
-    const events = ARTIST_NFT_DATA[artistId].events;
+    const events = artistData.events;
     const event = events[eventIndex % events.length];
     
-    // 멤버 선택 (memberIndex를 사용하여 순차적으로 다른 멤버 선택)
-    const members = ARTIST_NFT_DATA[artistId].members;
+    // 멤버 선택
+    const members = artistData.members;
     if (!members || members.length === 0) {
       throw new Error(`No members found for artist: ${artistId}`);
     }
     
     const memberId = members[memberIndex % members.length];
-    console.log(`Selected member for ${artistId}: ${memberId} (index: ${memberIndex})`);
     
     // 설명 생성
     const coinFeature = getRandomElement(COIN_FEATURES);
@@ -179,44 +173,138 @@ const createNFT = (artistId, eventIndex, tier = 'fan', memberIndex = 0) => {
     const description = `${coinFeature} ${coinDesign} ${coinRarity} ${coinValue}`;
     
     // 포인트 계산
-    const initialPoints = ARTIST_NFT_DATA[artistId].basePoints[tier];
+    const basePoints = artistData.basePoints[tier];
+    if (typeof basePoints !== 'number') {
+      throw new Error(`Invalid basePoints for tier ${tier}`);
+    }
+    
     const currentPoints = calculatePoints(tier, initialSales, currentSales);
     
-    // NFT ID 생성 (중복 방지를 위해 타임스탬프 추가)
+    // NFT ID 생성
     const nftId = `${artistId}_${event.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
     
-    // NFT 객체 생성 전 유효성 검사
-    if (!memberId) {
-      throw new Error(`Failed to assign memberId for artist: ${artistId}`);
-    }
-
-    const nft = {
+    return {
       id: nftId,
       artistId,
       memberId,
       name: `${artist.name} ${memberId === 'bibi' ? '' : ARTISTS[artistId].members.find(m => m.id === memberId)?.name || ''} - ${event}`,
       description,
       tier,
-      initialPoints,
+      initialPoints: basePoints,
       currentPoints,
       initialSales,
       currentSales,
       createdAt: new Date().toISOString(),
-      canFuse: tier !== 'founders'
+      canFuse: true,
+      fusionCount: 0  // 결합 횟수 추적을 위한 필드 추가
     };
-
-    // 생성된 NFT 객체 검증
-    console.log('Created NFT:', {
-      id: nft.id,
-      artistId: nft.artistId,
-      memberId: nft.memberId,
-      tier: nft.tier
-    });
-
-    return nft;
   } catch (error) {
     console.error('NFT 생성 중 오류:', error);
     return null;
+  }
+};
+
+// NFT 티어 순서 정의
+const TIER_PROGRESSION = {
+  fan: 'supporter',
+  supporter: 'earlybird',
+  earlybird: 'founders'
+};
+
+/**
+ * NFT 결합 가능 여부 확인
+ * @param {Array} nfts - 결합하려는 NFT 배열
+ * @returns {Object} 결합 가능 여부와 에러 메시지
+ */
+const validateNFTFusion = (nfts) => {
+  if (nfts.length !== 3) {
+    return { canFuse: false, error: '3개의 NFT가 필요합니다.' };
+  }
+
+  const firstNFT = nfts[0];
+  const sameTier = nfts.every(nft => nft.tier === firstNFT.tier);
+  if (!sameTier) {
+    return { canFuse: false, error: '같은 티어의 NFT만 결합할 수 있습니다.' };
+  }
+
+  const sameArtist = nfts.every(nft => nft.artistId === firstNFT.artistId);
+  if (!sameArtist) {
+    return { canFuse: false, error: '같은 아티스트의 NFT만 결합할 수 있습니다.' };
+  }
+
+  if (!TIER_PROGRESSION[firstNFT.tier]) {
+    return { canFuse: false, error: '더 이상 상위 티어로 결합할 수 없습니다.' };
+  }
+
+  return { canFuse: true };
+};
+
+/**
+ * NFT 결합 실행
+ * @param {Array} nftIds - 결합할 NFT ID 배열
+ * @param {string} userId - 사용자 ID
+ * @returns {Promise<Object>} 결합 결과
+ */
+export const fuseNFTs = async (nftIds, userId = DEFAULT_USER_ID) => {
+  try {
+    // 기존 NFT 데이터 가져오기
+    const nftsJson = await AsyncStorage.getItem(NFT_STORAGE_KEY(userId));
+    if (!nftsJson) {
+      return { success: false, error: 'NFT 데이터가 없습니다.' };
+    }
+
+    const allNFTs = JSON.parse(nftsJson);
+    const nftsToFuse = nftIds.map(id => allNFTs.find(nft => nft.id === id));
+
+    // 결합 가능 여부 확인
+    const { canFuse, error } = validateNFTFusion(nftsToFuse);
+    if (!canFuse) {
+      return { success: false, error };
+    }
+
+    const baseNFT = nftsToFuse[0];
+    const nextTier = TIER_PROGRESSION[baseNFT.tier];
+    
+    // 새로운 NFT 생성
+    const fusedNFT = {
+      ...baseNFT,
+      id: `${baseNFT.artistId}_fused_${Date.now()}`,
+      tier: nextTier,
+      initialPoints: ARTIST_NFT_DATA[baseNFT.artistId].basePoints[nextTier],
+      fusionCount: Math.max(...nftsToFuse.map(nft => nft.fusionCount)) + 1,
+      createdAt: new Date().toISOString(),
+      parentNFTs: nftIds
+    };
+
+    // 기존 NFT 제거 및 새로운 NFT 추가
+    const updatedNFTs = [
+      ...allNFTs.filter(nft => !nftIds.includes(nft.id)),
+      fusedNFT
+    ];
+
+    // 저장
+    await AsyncStorage.setItem(NFT_STORAGE_KEY(userId), JSON.stringify(updatedNFTs));
+
+    // 결합 히스토리 저장
+    const fusionHistoryKey = `fusion_history_${userId}`;
+    const historyJson = await AsyncStorage.getItem(fusionHistoryKey);
+    const history = historyJson ? JSON.parse(historyJson) : [];
+    history.push({
+      timestamp: new Date().toISOString(),
+      parentNFTs: nftIds,
+      resultNFT: fusedNFT.id,
+      tier: nextTier
+    });
+    await AsyncStorage.setItem(fusionHistoryKey, JSON.stringify(history));
+
+    return { 
+      success: true, 
+      fusedNFT,
+      message: `${baseNFT.artistId} NFT가 성공적으로 ${nextTier} 티어로 결합되었습니다.`
+    };
+  } catch (error) {
+    console.error('NFT 결합 오류:', error);
+    return { success: false, error: error.message };
   }
 };
 
@@ -249,11 +337,15 @@ export const generateArtistTestData = async (artistId, userId = 'user123') => {
     
     const nfts = [];
     
-    // 3개의 이벤트 NFT 생성
+    // Fan 티어 NFT만 3개 생성
     for (let i = 0; i < 3; i++) {
-      const nft = createNFT(artistId, i, 'fan', i);
+      const eventIndex = i % ARTIST_NFT_DATA[artistId].events.length;
+      const memberIndex = i % ARTIST_NFT_DATA[artistId].members.length;
+      
+      const nft = createNFT(artistId, eventIndex, 'fan', memberIndex);
       if (nft) {
         nfts.push(nft);
+        console.log(`Created Fan tier NFT for ${artistId} with event index ${eventIndex}`);
       }
     }
     
