@@ -147,7 +147,7 @@ const HomeScreen = React.memo(({ navigation }) => {
           activeOpacity={0.8}
         >
           <Image 
-            source={require('../assets/logo.png')} 
+            source={require('../assets/images/logo.png')} 
             style={styles.logo}
             resizeMode="contain"
           />
