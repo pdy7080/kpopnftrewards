@@ -59,7 +59,7 @@ export const NFTProvider = ({ children }) => {
         // 이미지 정보 추가
         const nftsWithImages = parsedData.map(nft => ({
           ...nft,
-          image: getNFTImage(nft.artistId, nft.memberId)
+          image: nft.imageUri || getNFTImage(nft.artistId, nft.memberId)
         }));
         setUserNFTs(nftsWithImages);
         

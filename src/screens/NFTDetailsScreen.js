@@ -121,9 +121,9 @@ const NFTDetailsScreen = () => {
           {nft.canFuse && (
             <TouchableOpacity
               style={[styles.fusionButton, { backgroundColor: tierData.color }]}
-              onPress={() => navigation.navigate('NFTFusion', { initialNFT: nft })}
+              onPress={() => navigation.navigate('Benefits', { nft })}
             >
-              <Text style={styles.fusionButtonText}>NFT 합성하기</Text>
+              <Text style={styles.fusionButtonText}>혜택 바로가기</Text>
             </TouchableOpacity>
           )}
         </View>

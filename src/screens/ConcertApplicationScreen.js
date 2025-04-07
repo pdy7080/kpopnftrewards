@@ -1,4 +1,3 @@
-// screens/FansignApplicationScreen.js
 import React, { useState } from 'react';
 import {
   View,
@@ -15,7 +14,7 @@ import { COLORS } from '../constants/colors';
 import { TIERS } from '../constants/tiers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const FansignApplicationScreen = ({ navigation, route }) => {
+const ConcertApplicationScreen = ({ navigation, route }) => {
   const { tier, maxUses, usedCount } = route.params;
   const tierInfo = TIERS[tier];
   
@@ -23,7 +22,7 @@ const FansignApplicationScreen = ({ navigation, route }) => {
     name: '',
     phone: '',
     email: '',
-    preferredMember: '',
+    preferredSeat: '',
     message: '',
   });
   
@@ -49,8 +48,8 @@ const FansignApplicationScreen = ({ navigation, route }) => {
       Alert.alert('오류', '이메일을 입력해주세요.');
       return false;
     }
-    if (!formData.preferredMember.trim()) {
-      Alert.alert('오류', '선호 멤버를 입력해주세요.');
+    if (!formData.preferredSeat.trim()) {
+      Alert.alert('오류', '선호 좌석을 입력해주세요.');
       return false;
     }
     return true;
@@ -70,21 +69,21 @@ const FansignApplicationScreen = ({ navigation, route }) => {
       };
       
       // 응모 내역 저장
-      const applications = await AsyncStorage.getItem('fansign_applications');
+      const applications = await AsyncStorage.getItem('concert_applications');
       const applicationsArray = applications ? JSON.parse(applications) : [];
       applicationsArray.push(applicationData);
-      await AsyncStorage.setItem('fansign_applications', JSON.stringify(applicationsArray));
+      await AsyncStorage.setItem('concert_applications', JSON.stringify(applicationsArray));
       
       // 사용 횟수 업데이트
       const benefitUsage = await AsyncStorage.getItem('benefit_usage');
       const usageData = benefitUsage ? JSON.parse(benefitUsage) : {};
-      const key = `fansign_${tier}`;
+      const key = `concert_${tier}`;
       usageData[key] = (usageData[key] || 0) + 1;
       await AsyncStorage.setItem('benefit_usage', JSON.stringify(usageData));
       
       Alert.alert(
         '신청 완료',
-        '팬사인회 응모가 완료되었습니다.',
+        '콘서트 응모가 완료되었습니다.',
         [
           {
             text: '확인',
@@ -109,7 +108,7 @@ const FansignApplicationScreen = ({ navigation, route }) => {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>팬사인회 응모</Text>
+        <Text style={styles.title}>콘서트 응모</Text>
         <View style={styles.placeholder} />
       </View>
       
@@ -166,12 +165,12 @@ const FansignApplicationScreen = ({ navigation, route }) => {
           </View>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>선호 멤버</Text>
+            <Text style={styles.label}>선호 좌석</Text>
             <TextInput
               style={styles.input}
-              value={formData.preferredMember}
-              onChangeText={(value) => handleInputChange('preferredMember', value)}
-              placeholder="선호하는 멤버를 입력하세요"
+              value={formData.preferredSeat}
+              onChangeText={(value) => handleInputChange('preferredSeat', value)}
+              placeholder="선호하는 좌석을 입력하세요"
             />
           </View>
           
@@ -308,4 +307,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FansignApplicationScreen;
+export default ConcertApplicationScreen; 

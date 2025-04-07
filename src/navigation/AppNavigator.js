@@ -17,6 +17,7 @@ import { QRScanScreen } from '../screens/QRScanScreen';
 import NFTAcquisitionSuccessScreen from '../screens/NFTAcquisitionSuccessScreen';
 import BenefitsScreen from '../screens/BenefitsScreen';
 import FansignApplicationScreen from '../screens/FansignApplicationScreen';
+import ConcertApplicationScreen from '../screens/ConcertApplicationScreen';
 import ConcertTicketScreen from '../screens/ConcertTicketScreen';
 import ExclusiveContentScreen from '../screens/ExclusiveContentScreen';
 
@@ -134,6 +135,14 @@ const AppNavigator = () => {
           component={FansignApplicationScreen}
           options={{
             title: SCREEN_TITLES[ROUTES.FANSIGN_APPLICATION],
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name={ROUTES.CONCERT_APPLICATION}
+          component={ConcertApplicationScreen}
+          options={{
+            title: SCREEN_TITLES[ROUTES.CONCERT_APPLICATION],
             headerShown: false,
           }}
         />

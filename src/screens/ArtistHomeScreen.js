@@ -113,6 +113,22 @@ const ArtistHomeScreen = ({ navigation, route }) => {
     }
   }, [artistNFTs, handleMenuPress, navigation, selectedArtist]);
 
+  // 혜택 메뉴 클릭 처리
+  const handleBenefitsPress = useCallback(() => {
+    // 사용자의 최고 티어 NFT 찾기
+    const highestTierNFT = artistNFTs.reduce((highest, current) => {
+      if (!highest) return current;
+      
+      const tierOrder = ['fan', 'supporter', 'earlybird', 'founders'];
+      const currentTierIndex = tierOrder.indexOf(current.tier);
+      const highestTierIndex = tierOrder.indexOf(highest.tier);
+      
+      return currentTierIndex > highestTierIndex ? current : highest;
+    }, null);
+    
+    navigation.navigate(ROUTES.BENEFITS, { nft: highestTierNFT });
+  }, [artistNFTs, navigation]);
+
   // NFT 컬렉션 섹션 렌더링
   const renderNFTCollection = useCallback(() => {
     const nftCount = artistNFTs?.length || 0;
@@ -259,7 +275,7 @@ const ArtistHomeScreen = ({ navigation, route }) => {
 
           <TouchableOpacity 
             style={styles.menuItem}
-            onPress={() => handleMenuPress(ROUTES.BENEFITS)}
+            onPress={handleBenefitsPress}
             activeOpacity={0.8}
           >
             <Ionicons name="gift" size={32} color={COLORS.primary} />

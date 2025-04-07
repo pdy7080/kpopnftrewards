@@ -23,6 +23,14 @@ import { TIERS, getNextTier, getTierPointsBonus } from '../constants/tiers';
 import { NFT_THEMES, generateNFTDescription } from '../constants/nftThemes';
 import { generateNFTDetails } from '../utils/nftGenerator';
 
+// 티어별 이미지 임포트
+const tierImages = {
+  fan: require('../../assets/tiers/fan.png'),
+  supporter: require('../../assets/tiers/supporter.png'),
+  earlybird: require('../../assets/tiers/earlybird.png'),
+  founders: require('../../assets/tiers/founders.png')
+};
+
 // Context
 import { useNFTContext } from '../contexts/NFTContext';
 
@@ -120,7 +128,8 @@ const NFTFusionScreen = React.memo(({ route, navigation }) => {
         artistId: selectedArtist.id,
         name: `${selectedArtist.name} ${themeInfo.name} ${TIERS[nextTier].name} NFT`,
         tier: nextTier,
-        image: selectedNFTs[0].image,
+        image: tierImages[nextTier],
+        imageUri: tierImages[nextTier],
         currentPoints: Number(initialPoints.toFixed(1)),
         initialPoints: Number(initialPoints.toFixed(1)),
         createdAt: new Date().toISOString(),

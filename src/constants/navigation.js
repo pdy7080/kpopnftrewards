@@ -13,6 +13,7 @@ export const ROUTES = {
   NFT_ACQUISITION_SUCCESS: 'NFTAcquisitionSuccess',
   BENEFITS: 'Benefits',
   FANSIGN_APPLICATION: 'FansignApplication',
+  CONCERT_APPLICATION: 'ConcertApplication',
   CONCERT_TICKET: 'ConcertTicket',
   EXCLUSIVE_CONTENT: 'ExclusiveContent',
   
@@ -36,6 +37,7 @@ export const SCREEN_TITLES = {
   [ROUTES.NFT_ACQUISITION_SUCCESS]: 'NFT 획득 성공',
   [ROUTES.BENEFITS]: '혜택',
   [ROUTES.FANSIGN_APPLICATION]: '팬사인회 응모',
+  [ROUTES.CONCERT_APPLICATION]: '콘서트 응모',
   [ROUTES.CONCERT_TICKET]: '콘서트 티켓',
   [ROUTES.EXCLUSIVE_CONTENT]: '독점 콘텐츠',
   [ROUTES.ADMIN]: '관리자 모드',
