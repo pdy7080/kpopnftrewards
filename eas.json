@@ -16,11 +16,7 @@
       "channel": "demo",
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease",
-        "env": {
-          "JAVA_HOME": "/usr/lib/jvm/java-11-openjdk-amd64",
-          "KOTLIN_JVMARGS": "-Xmx2048m"
-        }
+        "gradleCommand": ":app:assembleRelease -Dorg.gradle.java.home=/usr/lib/jvm/java-11"
       }
     },
     "production": {
