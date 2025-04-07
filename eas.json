@@ -17,7 +17,13 @@
       "android": {
         "buildType": "apk",
         "image": "ubuntu-22.04-jdk-17-ndk-r21e",
-        "gradleCommand": ":app:assembleRelease"
+        "gradleCommand": ":app:assembleRelease",
+        "env": {
+          "KOTLIN_JVMARGS": "-Xmx2048m",
+          "KOTLIN_TARGET": "17",
+          "ORG_GRADLE_PROJECT_kotlinOptions.jvmTarget": "17",
+          "ORG_GRADLE_PROJECT_android.kotlinOptions.jvmTarget": "17"
+        }
       }
     },
     "production": {
