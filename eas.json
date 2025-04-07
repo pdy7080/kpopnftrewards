@@ -18,7 +18,7 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease",
         "env": {
-          "JAVA_HOME": "11",
+          "JAVA_HOME": "/usr/lib/jvm/java-11-openjdk-amd64",
           "KOTLIN_JVMARGS": "-Xmx2048m"
         }
       }
