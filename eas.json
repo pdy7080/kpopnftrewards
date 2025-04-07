@@ -6,10 +6,34 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "gradleCommand": ":app:assembleDebug",
+        "env": {
+          "KOTLIN_JVMARGS": "-Xmx2048m",
+          "KOTLIN_TARGET": "17",
+          "ORG_GRADLE_PROJECT_kotlinOptions.jvmTarget": "17",
+          "ORG_GRADLE_PROJECT_android.kotlinOptions.jvmTarget": "17",
+          "ORG_GRADLE_PROJECT_android.compileOptions.sourceCompatibility": "17",
+          "ORG_GRADLE_PROJECT_android.compileOptions.targetCompatibility": "17"
+        }
+      },
+      "channel": "development"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "preview",
+      "android": {
+        "gradleCommand": ":app:assembleRelease",
+        "env": {
+          "KOTLIN_JVMARGS": "-Xmx2048m",
+          "KOTLIN_TARGET": "17",
+          "ORG_GRADLE_PROJECT_kotlinOptions.jvmTarget": "17",
+          "ORG_GRADLE_PROJECT_android.kotlinOptions.jvmTarget": "17",
+          "ORG_GRADLE_PROJECT_android.compileOptions.sourceCompatibility": "17",
+          "ORG_GRADLE_PROJECT_android.compileOptions.targetCompatibility": "17"
+        }
+      }
     },
     "demo": {
       "distribution": "internal",
@@ -22,12 +46,26 @@
           "KOTLIN_JVMARGS": "-Xmx2048m",
           "KOTLIN_TARGET": "17",
           "ORG_GRADLE_PROJECT_kotlinOptions.jvmTarget": "17",
-          "ORG_GRADLE_PROJECT_android.kotlinOptions.jvmTarget": "17"
+          "ORG_GRADLE_PROJECT_android.kotlinOptions.jvmTarget": "17",
+          "ORG_GRADLE_PROJECT_android.compileOptions.sourceCompatibility": "17",
+          "ORG_GRADLE_PROJECT_android.compileOptions.targetCompatibility": "17"
         }
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "production",
+      "android": {
+        "gradleCommand": ":app:assembleRelease",
+        "env": {
+          "KOTLIN_JVMARGS": "-Xmx2048m",
+          "KOTLIN_TARGET": "17",
+          "ORG_GRADLE_PROJECT_kotlinOptions.jvmTarget": "17",
+          "ORG_GRADLE_PROJECT_android.kotlinOptions.jvmTarget": "17",
+          "ORG_GRADLE_PROJECT_android.compileOptions.sourceCompatibility": "17",
+          "ORG_GRADLE_PROJECT_android.compileOptions.targetCompatibility": "17"
+        }
+      }
     }
   },
   "submit": {
