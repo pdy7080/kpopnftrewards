@@ -24,7 +24,7 @@ import { NFT_THEMES } from '../constants/nftThemes';
 import { generateNFTDetails } from '../utils/nftGenerator';
 
 // Context
-import { useNFTContext } from '../contexts/NFTContext';
+import { useNFT } from '../contexts/NFTContext';
 
 // 화면 너비 가져오기
 const { width } = Dimensions.get('window');
@@ -32,7 +32,7 @@ const CARD_WIDTH = width * 0.4;
 const CARD_HEIGHT = CARD_WIDTH * 1.4;
 
 const HomeScreen = React.memo(({ navigation }) => {
-  const { nfts, selectedArtist, setSelectedArtist } = useNFTContext();
+  const { nfts, selectedArtist, setSelectedArtist } = useNFT();
   const [filteredNFTs, setFilteredNFTs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -78,9 +78,7 @@ const HomeScreen = React.memo(({ navigation }) => {
       }
     };
     
-    if (selectedArtist) {
-      loadNFTs();
-    }
+    loadNFTs();
   }, [nfts, selectedArtist]);
   
   // 로고 탭 처리 (5번 연속 탭하면 관리자 화면으로 이동)
@@ -149,7 +147,7 @@ const HomeScreen = React.memo(({ navigation }) => {
           activeOpacity={0.8}
         >
           <Image 
-            source={require('../assets/images/logo.png')} 
+            source={require('../assets/logo.png')} 
             style={styles.logo}
             resizeMode="contain"
           />

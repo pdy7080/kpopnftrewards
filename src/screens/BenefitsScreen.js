@@ -35,7 +35,7 @@ const BenefitsScreen = ({ navigation }) => {
   const getUserHighestTier = () => {
     if (!userNFTs || userNFTs.length === 0) return null;
     
-    const tierOrder = ['founders', 'earlybird', 'supporter', 'fan'];
+    const tierOrder = ['founders', 'early_bird', 'supporter', 'fan'];
     let highestTier = 'fan';
     
     userNFTs.forEach(nft => {
@@ -83,27 +83,6 @@ const BenefitsScreen = ({ navigation }) => {
     }
   };
 
-  // 사용자의 최고 티어 확인
-  const getUserHighestTier = () => {
-    if (!userNFTs || userNFTs.length === 0) return null;
-    
-    const tiers = ['fan', 'supporter', 'earlybird', 'founders'];
-    let highestTier = 'fan';
-    
-    userNFTs.forEach(nft => {
-      const tierIndex = tiers.indexOf(nft.tier);
-      const highestTierIndex = tiers.indexOf(highestTier);
-      
-      if (tierIndex > highestTierIndex) {
-        highestTier = nft.tier;
-      }
-    });
-    
-    return highestTier;
-  };
-
-  const userHighestTier = getUserHighestTier();
-
   // 혜택 데이터
   const benefits = [
     {
@@ -113,7 +92,7 @@ const BenefitsScreen = ({ navigation }) => {
       tiers: {
         fan: { count: 1, description: '1회 응모 가능' },
         supporter: { count: 3, description: '3회 응모 가능' },
-        earlybird: { count: 5, description: '5회 응모 가능' },
+        early_bird: { count: 5, description: '5회 응모 가능' },
         founders: { count: 10, description: '10회 응모 가능' }
       }
     },
@@ -124,7 +103,7 @@ const BenefitsScreen = ({ navigation }) => {
       tiers: {
         fan: { time: 0, description: '일반 예매' },
         supporter: { time: 12, description: '12시간 전 예매' },
-        earlybird: { time: 24, description: '24시간 전 예매' },
+        early_bird: { time: 24, description: '24시간 전 예매' },
         founders: { time: 48, description: '48시간 전 예매' }
       }
     },
@@ -135,7 +114,7 @@ const BenefitsScreen = ({ navigation }) => {
       tiers: {
         fan: { access: 'basic', description: '기본 콘텐츠' },
         supporter: { access: 'premium', description: '프리미엄 콘텐츠' },
-        earlybird: { access: 'vip', description: 'VIP 콘텐츠' },
+        early_bird: { access: 'vip', description: 'VIP 콘텐츠' },
         founders: { access: 'all', description: '모든 콘텐츠' }
       }
     }
@@ -312,7 +291,7 @@ const BenefitsScreen = ({ navigation }) => {
     </View>
   ), [selectedTier]);
 
-  const renderBenefitItem = useCallback(({ item: benefit }) => (
+  const renderBenefitItem = useCallback(({ item: benefit, key }) => (
     <View style={styles.benefitCard}>
       <View style={styles.benefitHeader}>
         <View style={styles.benefitIconContainer}>
@@ -383,20 +362,36 @@ const BenefitsScreen = ({ navigation }) => {
                 </View>
               )}
               
-              {isAvailable && (
+              {/* 현재 티어에서만 신청하기 버튼 표시 */}
+              {userHighestTier === tier && (
                 <TouchableOpacity
-                  style={[styles.applyButton, { backgroundColor: tierInfo.color }]}
+                  style={[
+                    styles.applyButton, 
+                    { backgroundColor: isAvailable ? tierInfo.color : '#ccc' }
+                  ]}
                   onPress={() => handleApplyBenefit(benefit, tier)}
+                  disabled={!isAvailable}
                 >
-                  <Text style={styles.applyButtonText}>신청하기</Text>
+                  <Text style={styles.applyButtonText}>
+                    {isAvailable ? '신청하기' : '신청 불가'}
+                  </Text>
                 </TouchableOpacity>
+              )}
+              
+              {/* 현재 티어가 아닌 경우 다른 메시지 표시 */}
+              {userHighestTier !== tier && (
+                <View style={[styles.applyButton, { backgroundColor: '#f0f0f0' }]}>
+                  <Text style={[styles.applyButtonText, { color: '#666' }]}>
+                    {tierOrder.indexOf(tier) < tierOrder.indexOf(userHighestTier) ? '상위 티어 필요' : '하위 티어 혜택'}
+                  </Text>
+                </View>
               )}
             </View>
           );
         })}
       </View>
     </View>
-  ), [selectedTier, userNFTs, benefitUsage]);
+  ), [selectedTier, userNFTs, benefitUsage, userHighestTier]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -416,7 +411,11 @@ const BenefitsScreen = ({ navigation }) => {
         {renderTierFilter()}
         
         <View style={styles.benefitsContainer}>
-          {benefits.map(benefit => renderBenefitCard({ item: benefit }))}
+          {benefits.map((benefit, index) => (
+            <View key={benefit.id || `benefit-${index}`}>
+              {renderBenefitItem({ item: benefit })}
+            </View>
+          ))}
         </View>
       </ScrollView>
       
@@ -532,14 +531,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12,
   },
-  currentTierTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+  tierFilterContainer: {
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   tierFilter: {
     paddingVertical: 12,
@@ -547,7 +540,7 @@ const styles = StyleSheet.create({
   tierFilterContent: {
     paddingHorizontal: 8,
   },
-  tierFilterButton: {
+  filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
@@ -566,7 +559,7 @@ const styles = StyleSheet.create({
   filterButtonTextSelected: {
     color: 'white',
   },
-  content: {
+  benefitsContainer: {
     padding: 16,
   },
   benefitCard: {
@@ -581,11 +574,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  benefitIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary + '10',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  benefitTitleContainer: {
+    flex: 1,
+  },
   benefitTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginLeft: 8,
+    marginBottom: 4,
+  },
+  benefitSubtitle: {
+    fontSize: 12,
+    color: '#666',
+  },
+  tierBenefits: {
+    marginTop: 12,
+  },
+  tierBenefit: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  tierBenefitHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  availableBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  availableText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   benefitDescription: {
     fontSize: 14,
@@ -593,10 +627,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     lineHeight: 20,
   },
+  usageContainer: {
+    marginBottom: 12,
+  },
+  usageProgress: {
+    height: 4,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 2,
+    marginBottom: 8,
+  },
+  usageProgressBar: {
+    height: '100%',
+    borderRadius: 2,
+  },
   usageInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
   },
   usageText: {
     fontSize: 12,
@@ -636,16 +682,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
-  modalDescription: {
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalDetailText: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 24,
+    marginBottom: 8,
     textAlign: 'center',
-    lineHeight: 20,
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 24,
   },
   modalButton: {
     flex: 1,
