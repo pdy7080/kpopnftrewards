@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateArtistTestData, generateAllArtistsTestData } from '../services/admin/testDataService';
 import { ARTISTS } from '../constants/artists';
+import { MEMBER_IMAGES } from '../constants/memberImages';
 
 const NFTContext = createContext();
 
@@ -15,6 +16,28 @@ export const NFTProvider = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   const userId = 'user123'; // 테스트용 고정 사용자 ID
+
+  // NFT 이미지 가져오기 함수
+  const getNFTImage = useCallback((artistId, memberId) => {
+    try {
+      const artistImages = MEMBER_IMAGES[artistId];
+      if (!artistImages) {
+        console.warn('아티스트 이미지를 찾을 수 없음:', artistId);
+        return require('../assets/images/placeholder.png');
+      }
+
+      const memberImage = artistImages[memberId];
+      if (!memberImage) {
+        console.warn('멤버 이미지를 찾을 수 없음:', memberId);
+        return artistImages.group || require('../assets/images/placeholder.png');
+      }
+
+      return memberImage;
+    } catch (error) {
+      console.error('이미지 로드 오류:', error);
+      return require('../assets/images/placeholder.png');
+    }
+  }, []);
 
   // 아티스트 선택 처리 함수
   const changeSelectedArtist = useCallback(async (artistId) => {
@@ -33,11 +56,16 @@ export const NFTProvider = ({ children }) => {
       const storedData = await AsyncStorage.getItem(`user_nfts_${userId}`);
       if (storedData) {
         const parsedData = JSON.parse(storedData);
-        setUserNFTs(parsedData);
+        // 이미지 정보 추가
+        const nftsWithImages = parsedData.map(nft => ({
+          ...nft,
+          image: getNFTImage(nft.artistId, nft.memberId)
+        }));
+        setUserNFTs(nftsWithImages);
         
         // 선택된 아티스트의 NFT만 필터링
         if (selectedArtistId) {
-          const filteredNFTs = parsedData.filter(nft => nft.artistId === selectedArtistId);
+          const filteredNFTs = nftsWithImages.filter(nft => nft.artistId === selectedArtistId);
           setArtistNFTs(filteredNFTs);
         }
       } else {
@@ -49,7 +77,7 @@ export const NFTProvider = ({ children }) => {
       console.error('NFT 데이터 동기화 오류:', error);
       return false;
     }
-  }, [userId, selectedArtistId]);
+  }, [userId, selectedArtistId, getNFTImage]);
 
   // 선택된 아티스트 변경 시 NFT 필터링
   useEffect(() => {
@@ -65,6 +93,7 @@ export const NFTProvider = ({ children }) => {
   useEffect(() => {
     if (!isInitialized) {
       syncNFTData();
+      setIsInitialized(true);
     }
   }, [isInitialized, syncNFTData]);
 
@@ -147,7 +176,8 @@ export const NFTProvider = ({ children }) => {
     isLoading,
     syncNFTData,
     resetNFTData,
-    updateNFTData
+    updateNFTData,
+    getNFTImage
   };
 
   return (

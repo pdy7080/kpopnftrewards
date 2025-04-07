@@ -5,6 +5,7 @@ import { NFT_THEMES } from '../../constants/nftThemes';
 import { calculatePoints, getTierByPurchaseOrder } from '../pointsCalculator';
 import { generateNFTDetails } from '../../utils/nftGenerator';
 import { MEMBER_IMAGES } from '../../constants/memberImages';
+import { NFT_EVENTS } from '../../constants/nftThemes';
 
 // 테스트 데이터 생성을 위한 상수 정의
 const EVENTS = {
@@ -73,121 +74,150 @@ const COIN_VALUE = [
   '아티스트의 커리어 중 가장 중요한 순간을 담은 기념 아이템입니다.',
 ];
 
-// 티어별 포인트 계산 헬퍼 함수 (로컬에서만 사용)
-const calculatePointsLocally = (tier, purchaseOrder, currentSales) => {
-  // 티어별 초기 포인트
-  const initialPoints = TIERS[tier].initialPoints;
-  
-  // 판매량 증가에 따른 포인트 계산
-  const salesIncrease = currentSales - purchaseOrder;
-  
-  // 티어별 마일스톤 사이즈 (판매량 증가 단위)
-  const milestoneSize = {
-    founders: 100,
-    earlybird: 100,
-    supporter: 250,
-    fan: 500
-  }[tier];
-  
-  // 마일스톤 달성 횟수
-  const milestoneCount = Math.floor(salesIncrease / milestoneSize);
-  
-  // 티어별 마일스톤당 포인트 증가량
-  const pointsPerMilestone = {
-    founders: 3,
-    earlybird: 2,
-    supporter: 1,
-    fan: 0.5
-  }[tier];
-  
-  // 추가 포인트 계산
-  const additionalPoints = milestoneCount * pointsPerMilestone;
-  
-  // 최종 포인트 계산
-  return initialPoints + additionalPoints;
-};
-
-// NFT 특성 상수
-const NFT_CHARACTERISTICS = {
-  RARITY: ['common', 'rare', 'epic', 'legendary'],
-  SEASON: ['spring', 'summer', 'autumn', 'winter'],
-  EDITION: ['standard', 'limited', 'special']
+// 아티스트별 NFT 데이터
+const ARTIST_NFT_DATA = {
+  gidle: {
+    members: ['miyeon', 'minnie', 'soyeon', 'yuqi', 'shuhua'],
+    events: [
+      '토마토소스 뮤직비디오 기념주화',
+      'I-LAND 월드투어 기념주화',
+      '네버랜드 5주년 기념주화',
+      '퀸덤2 우승 기념주화'
+    ],
+    basePoints: {
+      fan: 5,
+      supporter: 10,
+      earlybird: 20,
+      founders: 30
+    }
+  },
+  bibi: {
+    members: ['bibi', 'bibi1', 'bibi2'],
+    events: [
+      '휴먼 앨범 발매 기념주화',
+      '아시아 투어 기념주화',
+      'BIBI UNIVERSE 콘서트 주화',
+      'KAZINO 5억뷰 기념주화'
+    ],
+    basePoints: {
+      fan: 5,
+      supporter: 10,
+      earlybird: 20,
+      founders: 30
+    }
+  },
+  chanwon: {
+    members: ['chanwon', 'chanwon1', 'chanwon2'],
+    events: [
+      '미스터트롯 기념주화',
+      '첫 단독 콘서트 기념주화',
+      '국민가수 시즌1 주화',
+      '신곡 우리 둘이 발매 기념주화'
+    ],
+    basePoints: {
+      fan: 5,
+      supporter: 10,
+      earlybird: 20,
+      founders: 30
+    }
+  }
 };
 
 // 랜덤 요소 선택 함수
 const getRandomElement = (array) => array[Math.floor(Math.random() * array.length)];
 
-// 랜덤 날짜 생성 함수 (최근 1년 내)
-const getRandomDate = () => {
-  const now = new Date();
-  const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-  return new Date(oneYearAgo.getTime() + Math.random() * (now.getTime() - oneYearAgo.getTime()));
-};
-
-// NFT 이벤트 목록 (각 아티스트별 3개씩 고정)
-const NFT_EVENTS = {
-  gidle: [
-    '2025 월드투어 기념 주화',
-    '데뷔 7주년 기념 주화',
-    'QUEENDOM 우승 기념 주화'
-  ],
-  bibi: [
-    '첫 월드투어 기념 주화',
-    '정규 2집 발매 기념 주화',
-    '첫 돔투어 기념 주화'
-  ],
-  chanwon: [
-    '미스터트롯 기념 주화',
-    '첫 단독 콘서트 기념 주화',
-    '전국투어 기념 주화'
-  ]
-};
+// 상수 정의
+const DEFAULT_USER_ID = 'user123';
+const NFT_STORAGE_KEY = (userId = DEFAULT_USER_ID) => `user_nfts_${userId}`;
 
 // NFT 생성 함수 수정
-const createNFT = (artistId, eventIndex) => {
-  const artist = ARTISTS[artistId];
-  if (!artist) {
-    console.error(`Invalid artist ID: ${artistId}`);
+const createNFT = (artistId, eventIndex, tier = 'fan', memberIndex = 0) => {
+  try {
+    const artist = ARTISTS[artistId];
+    if (!artist) {
+      console.error(`Invalid artist ID: ${artistId}`);
+      return null;
+    }
+    
+    // 티어별 구매 순번 범위
+    const purchaseOrderRanges = {
+      founders: { min: 1, max: 100 },
+      earlybird: { min: 101, max: 500 },
+      supporter: { min: 501, max: 1000 },
+      fan: { min: 1001, max: 5000 }
+    };
+
+    const range = purchaseOrderRanges[tier];
+    
+    // 구매 순번 생성
+    const initialSales = Math.floor(
+      Math.random() * (range.max - range.min + 1)
+    ) + range.min;
+    
+    // 현재 판매량 설정 (구매 순번 + 랜덤 추가 판매량)
+    const additionalSales = Math.floor(Math.random() * 10000);
+    const currentSales = initialSales + additionalSales;
+    
+    // 이벤트 정보
+    const events = ARTIST_NFT_DATA[artistId].events;
+    const event = events[eventIndex % events.length];
+    
+    // 멤버 선택 (memberIndex를 사용하여 순차적으로 다른 멤버 선택)
+    const members = ARTIST_NFT_DATA[artistId].members;
+    if (!members || members.length === 0) {
+      throw new Error(`No members found for artist: ${artistId}`);
+    }
+    
+    const memberId = members[memberIndex % members.length];
+    console.log(`Selected member for ${artistId}: ${memberId} (index: ${memberIndex})`);
+    
+    // 설명 생성
+    const coinFeature = getRandomElement(COIN_FEATURES);
+    const coinDesign = getRandomElement(COIN_DESIGNS);
+    const coinRarity = getRandomElement(COIN_RARITY);
+    const coinValue = getRandomElement(COIN_VALUE);
+    const description = `${coinFeature} ${coinDesign} ${coinRarity} ${coinValue}`;
+    
+    // 포인트 계산
+    const initialPoints = ARTIST_NFT_DATA[artistId].basePoints[tier];
+    const currentPoints = calculatePoints(tier, initialSales, currentSales);
+    
+    // NFT ID 생성 (중복 방지를 위해 타임스탬프 추가)
+    const nftId = `${artistId}_${event.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+    
+    // NFT 객체 생성 전 유효성 검사
+    if (!memberId) {
+      throw new Error(`Failed to assign memberId for artist: ${artistId}`);
+    }
+
+    const nft = {
+      id: nftId,
+      artistId,
+      memberId,
+      name: `${artist.name} ${memberId === 'bibi' ? '' : ARTISTS[artistId].members.find(m => m.id === memberId)?.name || ''} - ${event}`,
+      description,
+      tier,
+      initialPoints,
+      currentPoints,
+      initialSales,
+      currentSales,
+      createdAt: new Date().toISOString(),
+      canFuse: tier !== 'founders'
+    };
+
+    // 생성된 NFT 객체 검증
+    console.log('Created NFT:', {
+      id: nft.id,
+      artistId: nft.artistId,
+      memberId: nft.memberId,
+      tier: nft.tier
+    });
+
+    return nft;
+  } catch (error) {
+    console.error('NFT 생성 중 오류:', error);
     return null;
   }
-  
-  // 이벤트 이름과 이미지 가져오기
-  const eventName = NFT_EVENTS[artistId][eventIndex];
-  const image = ARTIST_IMAGES[artistId][eventIndex];
-  
-  // 주화 설명 생성
-  const coinFeature = getRandomElement(COIN_FEATURES);
-  const coinDesign = getRandomElement(COIN_DESIGNS);
-  const coinRarity = getRandomElement(COIN_RARITY);
-  const coinValue = getRandomElement(COIN_VALUE);
-  
-  const description = `${coinFeature} ${coinDesign} ${coinRarity} ${coinValue}`;
-  
-  // Fan 티어로 고정
-  const tier = 'fan';
-  
-  // 구매 순번 범위 설정 (Fan 티어: 1001-5000)
-  const purchaseOrderMin = 1001;
-  const purchaseOrderMax = 5000;
-  
-  const purchaseOrder = Math.floor(Math.random() * (purchaseOrderMax - purchaseOrderMin + 1)) + purchaseOrderMin;
-  const additionalSales = Math.floor(Math.random() * 1000);
-  const currentSales = purchaseOrder + additionalSales;
-  
-  return {
-    id: `${artistId}_event_${eventIndex}_${Date.now()}`,
-    artistId,
-    name: `${eventName} NFT`,
-    description,
-    tier,
-    initialPoints: TIERS[tier].initialPoints,
-    currentPoints: calculatePointsLocally(tier, purchaseOrder, currentSales),
-    initialSales: purchaseOrder,
-    currentSales,
-    image,
-    createdAt: getRandomDate().toISOString(),
-    canFuse: true
-  };
 };
 
 /**
@@ -221,7 +251,7 @@ export const generateArtistTestData = async (artistId, userId = 'user123') => {
     
     // 3개의 이벤트 NFT 생성
     for (let i = 0; i < 3; i++) {
-      const nft = createNFT(artistId, i);
+      const nft = createNFT(artistId, i, 'fan', i);
       if (nft) {
         nfts.push(nft);
       }
@@ -286,42 +316,54 @@ export const generateAllTestData = async (userId = 'user123') => {
   }
 };
 
-/**
- * 테스트용 NFT 데이터 생성
- */
-export const generateTestData = () => {
-  const testData = [];
-  const basePrice = 100000; // 기본 가격 100,000원
-  const totalSupply = 1000; // 총 발행량
-  
-  EVENTS.forEach((event, eventIndex) => {
-    // NFT 등급별 설정
-    const grades = ['normal', 'rare', 'unique'];
-    const gradeMultipliers = [1, 2, 5]; // 등급별 가격 배율
-    const gradeSupplyRatios = [0.7, 0.25, 0.05]; // 등급별 발행량 비율
+// 테스트 데이터 생성 함수 수정
+export const generateTestData = async (userId = DEFAULT_USER_ID) => {
+  try {
+    const nfts = [];
+    let nftIndex = 0;
     
-    grades.forEach((grade, gradeIndex) => {
-      const supply = Math.floor(totalSupply * gradeSupplyRatios[gradeIndex]);
-      const price = basePrice * gradeMultipliers[gradeIndex];
-      const sold = Math.floor(supply * (0.8 - (0.2 * gradeIndex))); // 등급이 높을수록 판매량 감소
-      
-      testData.push({
-        id: `${event.id}_${grade}`,
-        name: `${event.name} - ${grade.toUpperCase()}`,
-        description: event.description,
-        image: `../../assets/artists/chanwon/chanwon${event.imageIndex}.jpg`,
-        price: price,
-        totalSupply: supply,
-        sold: sold,
-        artistId: 'chanwon',
-        grade: grade,
-        createdAt: new Date(2024, eventIndex, 1).toISOString(),
-        updatedAt: new Date().toISOString()
+    // 각 아티스트별로 NFT 생성
+    Object.keys(ARTIST_NFT_DATA).forEach(artistId => {
+      // 각 티어별 NFT 생성
+      Object.keys(TIERS).forEach((tier, tierIndex) => {
+        // 각 이벤트별 NFT 생성 (티어당 1개)
+        const eventIndex = Math.floor(Math.random() * ARTIST_NFT_DATA[artistId].events.length);
+        
+        // 각 아티스트의 멤버/이미지 목록
+        const members = ARTIST_NFT_DATA[artistId].members;
+        
+        // 순차적으로 다른 멤버/이미지 선택 (tierIndex를 사용하여 다른 이미지 선택)
+        const memberIndex = tierIndex % members.length;
+        const memberId = members[memberIndex];
+        
+        console.log(`Creating NFT for ${artistId} with memberId: ${memberId}, tier: ${tier}, memberIndex: ${memberIndex}`);
+        
+        const nft = createNFT(artistId, eventIndex, tier, memberIndex);
+        if (nft) {
+          nfts.push(nft);
+          console.log(`Created NFT for ${artistId} with memberId: ${memberId}, tier: ${tier}`);
+        } else {
+          console.error(`Failed to create NFT for artist: ${artistId}, tier: ${tier}`);
+        }
       });
     });
-  });
-  
-  return testData;
+
+    if (nfts.length === 0) {
+      throw new Error('No NFTs were created');
+    }
+
+    // NFT 데이터 저장
+    await AsyncStorage.setItem(NFT_STORAGE_KEY(userId), JSON.stringify(nfts));
+
+    return { 
+      success: true, 
+      nfts,
+      message: `총 ${nfts.length}개의 NFT가 생성되었습니다.`
+    };
+  } catch (error) {
+    console.error('테스트 데이터 생성 오류:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 /**
@@ -332,99 +374,37 @@ export const generateTestData = () => {
  * @param {string} userId - 사용자 ID (기본값: 'user123')
  * @returns {Promise<Object>} 결과 객체
  */
-export const generateSalesSimulationData = async (artistId, tier, userId = 'user123') => {
+export const generateSalesSimulationData = async (artistId, tier, userId = DEFAULT_USER_ID) => {
   try {
-    // 아티스트 정보 확인
-    const artist = ARTISTS[artistId];
-    if (!artist) {
-      return { success: false, error: '유효하지 않은 아티스트 ID입니다.' };
-    }
-    
-    // 티어 정보 확인
-    if (!TIERS[tier]) {
-      return { success: false, error: '유효하지 않은 티어입니다.' };
-    }
-    
     // 기존 NFT 데이터 가져오기
-    const existingNFTsJson = await AsyncStorage.getItem(`user_nfts_${userId}`);
+    const existingNFTsJson = await AsyncStorage.getItem(NFT_STORAGE_KEY(userId));
     let existingNFTs = [];
-    if (existingNFTsJson) {
-      try {
+    try {
+      if (existingNFTsJson) {
         existingNFTs = JSON.parse(existingNFTsJson);
-        // 해당 아티스트와 티어의 NFT 제거
-        existingNFTs = existingNFTs.filter(nft => 
-          !(nft.artistId === artistId && nft.tier === tier)
-        );
-      } catch (parseError) {
-        console.error('NFT 데이터 파싱 오류:', parseError);
       }
+    } catch (error) {
+      console.error('기존 NFT 데이터 파싱 오류:', error);
     }
+
+    // 새로운 NFT 생성
+    const eventIndex = Math.floor(Math.random() * ARTIST_NFT_DATA[artistId].events.length);
+    const memberIndex = Math.floor(Math.random() * ARTIST_NFT_DATA[artistId].members.length);
+    const nft = createNFT(artistId, eventIndex, tier, memberIndex);
     
-    // 랜덤 멤버 선택
-    const members = artist.members;
-    const member = members[Math.floor(Math.random() * members.length)];
-    
-    // 티어별 구매 순번 범위 설정
-    let purchaseOrderMin, purchaseOrderMax;
-    switch (tier) {
-      case 'founders':
-        purchaseOrderMin = 1;
-        purchaseOrderMax = 100;
-        break;
-      case 'earlybird':
-        purchaseOrderMin = 101;
-        purchaseOrderMax = 500;
-        break;
-      case 'supporter':
-        purchaseOrderMin = 501;
-        purchaseOrderMax = 1000;
-        break;
-      default: // fan
-        purchaseOrderMin = 1001;
-        purchaseOrderMax = 5000;
-        break;
+    if (!nft) {
+      return { success: false, error: 'NFT 생성 실패' };
     }
-    
-    // 랜덤 구매 순번 생성
-    const purchaseOrder = Math.floor(
-      Math.random() * (purchaseOrderMax - purchaseOrderMin + 1)
-    ) + purchaseOrderMin;
-    
-    // 현재 판매량 설정 (구매 순번 + 랜덤 추가 판매량)
-    const additionalSales = Math.floor(Math.random() * 1000);
-    const currentSales = purchaseOrder + additionalSales;
-    
-    // 포인트 계산
-    const currentPoints = calculatePointsLocally(tier, purchaseOrder, currentSales);
-    
-    // NFT 이름 및 설명 생성
-    const nftDetails = generateNFTDetails(artistId, member.id);
-    
-    // NFT 객체 생성
-    const nft = {
-      id: `sim_${artistId}_${tier}_${Date.now()}`,
-      artistId,
-      memberId: member.id,
-      name: nftDetails.name,
-      description: nftDetails.description,
-      tier,
-      initialPoints: TIERS[tier].initialPoints,
-      currentPoints,
-      initialSales: purchaseOrder,
-      currentSales,
-      createdAt: new Date().toISOString(),
-      canFuse: true
-    };
-    
+
     // 기존 NFT와 새 NFT 합치기
     const allNFTs = [...existingNFTs, nft];
     
-    // NFT 저장
-    await AsyncStorage.setItem(`user_nfts_${userId}`, JSON.stringify(allNFTs));
+    // 저장
+    await AsyncStorage.setItem(NFT_STORAGE_KEY(userId), JSON.stringify(allNFTs));
     
     return { success: true, nft };
   } catch (error) {
-    console.error('판매량 시뮬레이션 데이터 생성 오류:', error);
+    console.error('시뮬레이션 데이터 생성 오류:', error);
     return { success: false, error: error.message };
   }
 };

@@ -10,30 +10,42 @@ import { TIERS } from '../constants/tiers';
  * @returns {number} 계산된 포인트
  */
 export const calculatePoints = (tier, initialSales, currentSales) => {
-  // 티어 설정 가져오기
-  const tierConfig = TIERS[tier.toLowerCase()] || TIERS.fan;
-  
-  // 초기 포인트
-  const initialPoints = tierConfig.initialPoints;
+  // 기본값 설정
+  initialSales = initialSales || 0;
+  currentSales = currentSales || 0;
+
+  // 티어별 기본 포인트
+  const basePoints = TIERS[tier].initialPoints || 0;
   
   // 판매량 증가분 계산
   const salesIncrease = Math.max(0, currentSales - initialSales);
   
-  // 마일스톤 횟수 계산
+  // 티어별 마일스톤 사이즈 (판매량 증가 단위)
   const milestoneSize = tier === 'fan' ? 500 : 100;
+  
+  // 마일스톤 달성 횟수
   const milestoneCount = Math.floor(salesIncrease / milestoneSize);
   
-  // 티어별 포인트 증가율
+  // 티어별 마일스톤당 포인트 증가량
   const pointsPerMilestone = 
-    tier === 'founders' ? 3 :
-    tier === 'earlybird' ? 2 :
-    1;
+    tier === 'founders' ? 3 :    // Founders: 가장 높은 성장률
+    tier === 'earlybird' ? 2 :   // Early Bird: 중상위 성장률
+    tier === 'supporter' ? 1 :   // Supporter: 중위 성장률
+    0.5;                         // Fan: 기본 성장률
+
+  // 추가 보너스 포인트 (티어별 차등)
+  const tierBonus = 
+    tier === 'founders' ? 0.5 :   // Founders: 50% 추가 보너스
+    tier === 'earlybird' ? 0.3 :  // Early Bird: 30% 추가 보너스
+    tier === 'supporter' ? 0.2 :  // Supporter: 20% 추가 보너스
+    0.1;                          // Fan: 10% 추가 보너스
   
   // 추가 포인트 계산
   const additionalPoints = milestoneCount * pointsPerMilestone;
+  const bonusPoints = additionalPoints * tierBonus;
   
-  // 최종 포인트 반환 (소수점 한 자리까지)
-  return Math.round((initialPoints + additionalPoints) * 10) / 10;
+  // 최종 포인트 계산 (소수점 한 자리까지)
+  return Number((basePoints + additionalPoints + bonusPoints).toFixed(1));
 };
 
 /**

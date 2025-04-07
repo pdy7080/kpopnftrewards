@@ -184,7 +184,7 @@ const TIER_FRAMES = {
   founders: require('../../assets/frames/founders.png'),
 };
 
-// 아티스트별 멤버 이미지 매핑
+// 아티스트별 멤버 이미지 매핑 수정
 const MEMBER_IMAGES = {
   gidle: {
     miyeon: require('../../assets/artists/gidle/members/miyeon.jpg'),
@@ -192,41 +192,48 @@ const MEMBER_IMAGES = {
     soyeon: require('../../assets/artists/gidle/members/soyeon.jpg'),
     yuqi: require('../../assets/artists/gidle/members/yuqi.jpg'),
     shuhua: require('../../assets/artists/gidle/members/shuhua.jpg'),
+    group: require('../../assets/artists/gidle/group.jpg')
   },
   bibi: {
     bibi: require('../../assets/artists/bibi/profile.jpg'),
+    bibi1: require('../../assets/artists/bibi/profile1.jpg'),
+    bibi2: require('../../assets/artists/bibi/profile2.jpg'),
+    bibi3: require('../../assets/artists/bibi/profile3.jpg'),
   },
   chanwon: {
     chanwon: require('../../assets/artists/chanwon/profile.jpg'),
-  },
+    chanwon1: require('../../assets/artists/chanwon/profile1.jpg'),
+    chanwon2: require('../../assets/artists/chanwon/profile2.jpg'),
+    chanwon3: require('../../assets/artists/chanwon/profile3.jpg'),
+  }
 };
 
-// NFT 이름 생성
-const getNFTName = (artistId, memberId) => {
-  const events = {
-    gidle: [
-      'I-LAND 월드투어 기념 주화',
-      '네버랜드 5주년 기념 주화',
-      '퀸덤2 우승 기념 주화',
-      '토마토소스 뮤직비디오 기념 주화',
-    ],
-    bibi: [
-      '휴먼 앨범 발매 기념 주화',
-      '아시아 투어 기념 주화',
-      'BIBI UNIVERSE 콘서트 주화',
-      'KAZINO 5억뷰 기념 주화',
-    ],
-    chanwon: [
-      '미스터트롯 기념 주화',
-      '첫 단독 콘서트 기념 주화',
-      '국민가수 시즌1 주화',
-      '신곡 우리 둘이 발매 기념 주화',
-    ],
-  };
+// NFT 이벤트 데이터
+const NFT_EVENTS = {
+  gidle: [
+    '토마토소스 뮤직비디오 기념주화',
+    'I-LAND 월드투어 기념주화',
+    '네버랜드 5주년 기념주화',
+    '퀸덤2 우승 기념주화'
+  ],
+  bibi: [
+    '휴먼 앨범 발매 기념주화',
+    '아시아 투어 기념주화',
+    'BIBI UNIVERSE 콘서트 주화',
+    'KAZINO 5억뷰 기념주화'
+  ],
+  chanwon: [
+    '미스터트롯 기념주화',
+    '첫 단독 콘서트 기념주화',
+    '국민가수 시즌1 주화',
+    '신곡 우리 둘이 발매 기념주화'
+  ]
+};
 
-  const eventList = events[artistId] || events.gidle;
-  const randomIndex = Math.floor(Math.random() * eventList.length);
-  return `${eventList[randomIndex]} NFT`;
+// NFT 이름 생성 함수 수정
+const getNFTName = (artistId, eventIndex = 0) => {
+  const events = NFT_EVENTS[artistId] || NFT_EVENTS.gidle;
+  return `${events[eventIndex % events.length]} NFT`;
 };
 
 const SalesSimulationScreen = ({ navigation }) => {
@@ -248,15 +255,48 @@ const SalesSimulationScreen = ({ navigation }) => {
     setIsLoading(false);
   }, [userNFTs]);
   
-  // NFT 이미지 가져오기
+  // NFT 이미지 가져오기 함수 수정
   const getNFTImage = () => {
-    if (!selectedNFT) return require('../../assets/images/placeholder.png');
-    
     try {
-      return MEMBER_IMAGES[selectedNFT.artistId]?.[selectedNFT.memberId] || 
-             require('../../assets/images/placeholder.png');
+      // NFT가 없는 경우
+      if (!selectedNFT) {
+        console.warn('선택된 NFT가 없음');
+        return require('../../assets/images/placeholder.png');
+      }
+
+      // artistId 검증
+      if (!selectedNFT.artistId) {
+        console.warn('아티스트 ID가 없음:', selectedNFT);
+        return require('../../assets/images/placeholder.png');
+      }
+
+      // 아티스트 이미지 매핑 검증
+      const artistImages = MEMBER_IMAGES[selectedNFT.artistId];
+      if (!artistImages) {
+        console.warn('아티스트 이미지 매핑을 찾을 수 없음:', selectedNFT.artistId);
+        return require('../../assets/images/placeholder.png');
+      }
+
+      // memberId 검증
+      if (!selectedNFT.memberId) {
+        console.warn('멤버 ID가 없음. 그룹 이미지 사용:', selectedNFT);
+        return artistImages.group;
+      }
+
+      // 멤버 이미지 검증
+      const memberImage = artistImages[selectedNFT.memberId];
+      if (!memberImage) {
+        console.warn('멤버 이미지를 찾을 수 없음. 그룹 이미지 사용:', {
+          artistId: selectedNFT.artistId,
+          memberId: selectedNFT.memberId,
+          availableMembers: Object.keys(artistImages)
+        });
+        return artistImages.group;
+      }
+
+      return memberImage;
     } catch (error) {
-      console.error('NFT 이미지 로드 오류:', error);
+      console.error('이미지 로드 오류:', error, selectedNFT);
       return require('../../assets/images/placeholder.png');
     }
   };
@@ -272,44 +312,68 @@ const SalesSimulationScreen = ({ navigation }) => {
     }
   };
   
-  // 티어별 포인트 상승률 계산
+  // 티어별 포인트 상승률 계산 함수 수정
   const calculateTierPointsIncrease = (tier, initialSales, currentSales, newSales) => {
+    // 기본값 설정
+    initialSales = initialSales || 0;
+    currentSales = currentSales || 0;
+    newSales = newSales || 0;
+
     // 티어별 설정
-    const tierConfig = TIERS[tier];
+    const basePoints = TIERS[tier].initialPoints || 0;
     const milestoneSize = tier === 'fan' ? 500 : 100;
+    
+    // 티어별 포인트 증가율 차별화
     const pointsPerMilestone = 
-      tier === 'founders' ? 3 :
-      tier === 'earlybird' ? 2 :
-      tier === 'supporter' ? 1 :
-      0.5;
+      tier === 'founders' ? 3 :    // Founders: 가장 높은 성장률
+      tier === 'earlybird' ? 2 :   // Early Bird: 중상위 성장률
+      tier === 'supporter' ? 1 :   // Supporter: 중위 성장률
+      0.5;                         // Fan: 기본 성장률
+
+    // 추가 보너스 포인트 (티어별 차등)
+    const tierBonus = 
+      tier === 'founders' ? 0.5 :   // Founders: 50% 추가 보너스
+      tier === 'earlybird' ? 0.3 :  // Early Bird: 30% 추가 보너스
+      tier === 'supporter' ? 0.2 :  // Supporter: 20% 추가 보너스
+      0.1;                          // Fan: 10% 추가 보너스
     
     // 현재 포인트 계산
     const currentSalesIncrease = Math.max(0, currentSales - initialSales);
     const currentMilestoneCount = Math.floor(currentSalesIncrease / milestoneSize);
     const currentAdditionalPoints = currentMilestoneCount * pointsPerMilestone;
-    const currentPoints = tierConfig.initialPoints + currentAdditionalPoints;
+    const currentBonusPoints = currentAdditionalPoints * tierBonus;
+    const currentPoints = basePoints + currentAdditionalPoints + currentBonusPoints;
     
     // 새 포인트 계산
     const newSalesIncrease = Math.max(0, newSales - initialSales);
     const newMilestoneCount = Math.floor(newSalesIncrease / milestoneSize);
     const newAdditionalPoints = newMilestoneCount * pointsPerMilestone;
-    const newPoints = tierConfig.initialPoints + newAdditionalPoints;
+    const newBonusPoints = newAdditionalPoints * tierBonus;
+    const newPoints = basePoints + newAdditionalPoints + newBonusPoints;
+
+    // 성장률 계산 (0으로 나누기 방지)
+    const growthRate = currentPoints > 0 
+      ? ((newPoints - currentPoints) / currentPoints * 100).toFixed(1)
+      : '0.0';
     
     return {
-      initialPoints: tierConfig.initialPoints,
-      currentPoints,
-      newPoints,
-      increase: newPoints - currentPoints,
-      growthRate: ((newPoints - currentPoints) / currentPoints * 100).toFixed(1)
+      initialPoints: basePoints,
+      currentPoints: Number(currentPoints.toFixed(1)),
+      newPoints: Number(newPoints.toFixed(1)),
+      increase: Number((newPoints - currentPoints).toFixed(1)),
+      growthRate,
+      milestoneCount: newMilestoneCount,
+      bonusPoints: Number(newBonusPoints.toFixed(1))
     };
   };
   
-  // 시뮬레이션 실행
+  // 시뮬레이션 실행 함수 수정
   const runSimulation = () => {
     if (!selectedNFT) return;
     
-    const newSales = parseInt(salesInput) || selectedNFT.currentSales || 0;
+    const newSales = parseInt(salesInput) || 0;
     const currentSales = selectedNFT.currentSales || 0;
+    const initialSales = selectedNFT.initialSales || 0;
     
     // 판매량이 현재 판매량과 같으면 시뮬레이션 불필요
     if (newSales === currentSales) {
@@ -319,8 +383,8 @@ const SalesSimulationScreen = ({ navigation }) => {
     // 티어별 비교 데이터 생성
     const comparisonData = Object.keys(TIERS).map(tier => {
       const result = calculateTierPointsIncrease(
-        tier, 
-        selectedNFT.initialSales || 0, 
+        tier,
+        initialSales,
         currentSales,
         newSales
       );
@@ -343,22 +407,23 @@ const SalesSimulationScreen = ({ navigation }) => {
     // 현재 선택된 티어의 결과
     const selectedTierResult = comparisonData.find(item => item.tier === selectedNFT.tier);
     
-    // 시뮬레이션 결과 설정
-    setSimulationResult({
-      initialSales: currentSales,
-      newSales,
-      initialPoints: selectedTierResult.currentPoints,
-      newPoints: selectedTierResult.newPoints,
-      pointsIncrease: selectedTierResult.increase,
-      growthRate: selectedTierResult.growthRate
-    });
-    
-    // 포인트 애니메이션
-    Animated.timing(pointsAnim, {
-      toValue: selectedTierResult.newPoints,
-      duration: 1500,
-      useNativeDriver: false
-    }).start();
+    if (selectedTierResult) {
+      setSimulationResult({
+        initialSales: currentSales,
+        newSales,
+        initialPoints: selectedTierResult.currentPoints,
+        newPoints: selectedTierResult.newPoints,
+        pointsIncrease: selectedTierResult.increase,
+        growthRate: selectedTierResult.growthRate
+      });
+      
+      // 포인트 애니메이션
+      Animated.timing(pointsAnim, {
+        toValue: selectedTierResult.newPoints,
+        duration: 1500,
+        useNativeDriver: false
+      }).start();
+    }
   };
   
   // 차트 데이터 생성
@@ -409,6 +474,38 @@ const SalesSimulationScreen = ({ navigation }) => {
     return points.toFixed(1);
   };
 
+  // 시뮬레이션 결과 표시 컴포넌트 추가
+  const SimulationInsights = ({ result, tierData }) => {
+    if (!result) return null;
+
+    return (
+      <View style={styles.insightsContainer}>
+        <Text style={styles.insightsTitle}>투자 가치 분석</Text>
+        
+        <View style={styles.insightItem}>
+          <Text style={styles.insightHeader}>초기 구매자 보상</Text>
+          <Text style={styles.insightText}>
+            {`Founders 티어는 Fan 티어 대비 ${(tierData.find(t => t.tier === 'founders').growthRate / tierData.find(t => t.tier === 'fan').growthRate).toFixed(1)}배 높은 성장률을 보입니다.`}
+          </Text>
+        </View>
+        
+        <View style={styles.insightItem}>
+          <Text style={styles.insightHeader}>마일스톤 달성</Text>
+          <Text style={styles.insightText}>
+            {`현재까지 ${result.milestoneCount}개의 마일스톤을 달성했으며, 추가 보너스 포인트 ${result.bonusPoints}P가 적립되었습니다.`}
+          </Text>
+        </View>
+        
+        <View style={styles.insightItem}>
+          <Text style={styles.insightHeader}>장기 투자 가치</Text>
+          <Text style={styles.insightText}>
+            판매량이 증가할수록 NFT의 가치가 자동으로 상승하며, 상위 티어일수록 더 높은 성장률을 보입니다.
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -454,10 +551,10 @@ const SalesSimulationScreen = ({ navigation }) => {
                 </View>
                 
                 <Text style={styles.nftTitle}>
-                  {selectedNFT.artistId === 'gidle' ? '여자아이들' :
-                   selectedNFT.artistId === 'bibi' ? '비비' : '이찬원'}
-                  {' - '}
-                  {getNFTName(selectedNFT.artistId, selectedNFT.memberId)}
+                  {selectedNFT.name || `${
+                    selectedNFT.artistId === 'gidle' ? '여자아이들' :
+                    selectedNFT.artistId === 'bibi' ? '비비' : '이찬원'
+                  } ${selectedNFT.memberId}`}
                 </Text>
                 
                 <Text style={styles.nftSubtitle}>
@@ -596,6 +693,11 @@ const SalesSimulationScreen = ({ navigation }) => {
                 </View>
               ))}
             </View>
+
+            <SimulationInsights 
+              result={simulationResult}
+              tierData={tierComparisonData}
+            />
           </View>
         )}
       </ScrollView>
