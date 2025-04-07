@@ -15,11 +15,7 @@
       "distribution": "internal",
       "channel": "demo",
       "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease",
-        "env": {
-          "ANDROID_NDK_HOME": "/usr/local/share/android-ndk"
-        }
+        "buildType": "apk"
       }
     },
     "production": {
