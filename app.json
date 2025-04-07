@@ -2,7 +2,7 @@
   "expo": {
     "name": "KpopNftRewards",
     "slug": "KpopNftRewards",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "myapp",
@@ -11,6 +11,7 @@
     "updates": {
       "enabled": true,
       "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD",
       "url": "https://u.expo.dev/709fcbf4-1766-4110-ae2a-14af3b067b0b"
     },
     "runtimeVersion": {

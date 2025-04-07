@@ -1,11 +1,13 @@
 // app.js
-import React from 'react';
+import React, { useEffect } from 'react';
+import * as Updates from 'expo-updates';
 import { 
   UIManager, 
   Platform, 
   LogBox,
   TouchableOpacity,
-  View
+  View,
+  Alert
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './navigation/AppNavigator';
@@ -37,7 +39,43 @@ if (Platform.OS === 'android') {
   }
 }
 
+// 업데이트 확인 함수
+async function checkUpdates() {
+  try {
+    const update = await Updates.checkForUpdateAsync();
+    if (update.isAvailable) {
+      Alert.alert(
+        "업데이트 알림",
+        "새로운 버전이 있습니다. 업데이트하시겠습니까?",
+        [
+          {
+            text: "나중에",
+            style: "cancel"
+          },
+          {
+            text: "업데이트",
+            onPress: async () => {
+              try {
+                await Updates.fetchUpdateAsync();
+                await Updates.reloadAsync();
+              } catch (error) {
+                Alert.alert("오류", "업데이트 중 문제가 발생했습니다.");
+              }
+            }
+          }
+        ]
+      );
+    }
+  } catch (error) {
+    console.log('업데이트 확인 중 오류:', error);
+  }
+}
+
 const App = () => {
+  useEffect(() => {
+    checkUpdates();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
