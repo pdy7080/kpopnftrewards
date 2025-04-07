@@ -15,7 +15,12 @@
       "distribution": "internal",
       "channel": "demo",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "env": {
+          "JAVA_HOME": "11",
+          "KOTLIN_JVMARGS": "-Xmx2048m"
+        }
       }
     },
     "production": {

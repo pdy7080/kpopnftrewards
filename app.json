@@ -25,7 +25,9 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.dcclab.KpopNftRewards"
+      "package": "com.dcclab.KpopNftRewards",
+      "kotlinVersion": "1.8.0",
+      "javaVersion": "11"
     },
     "web": {
       "bundler": "metro",
