@@ -26,6 +26,59 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 // 혜택 사용 내역을 저장할 키
 const BENEFIT_USAGE_KEY = 'benefit_usage';
 
+const BenefitItem = React.memo(({ benefit, tier, isAvailable, onPress, usedCount, maxCount }) => {
+  const tierInfo = TIERS[tier];
+  const remainingCount = maxCount - usedCount;
+
+  return (
+    <View style={styles.benefitCard}>
+      <View style={styles.benefitHeader}>
+        <View style={styles.benefitIconContainer}>
+          <Ionicons name={benefit.icon} size={24} color={tierInfo.color} />
+        </View>
+        <View style={styles.benefitTitleContainer}>
+          <Text style={styles.benefitTitle}>{benefit.title}</Text>
+          <Text style={styles.benefitSubtitle}>{benefit.description}</Text>
+        </View>
+      </View>
+
+      <View style={styles.tierBenefits}>
+        <View style={[styles.tierBenefitCard, { borderColor: tierInfo.color }]}>
+          <View style={styles.tierBenefitHeader}>
+            <Text style={[styles.tierBenefitTitle, { color: tierInfo.color }]}>
+              {tierInfo.displayName}
+            </Text>
+            <View style={[styles.availabilityBadge, { backgroundColor: isAvailable ? tierInfo.color : '#ccc' }]}>
+              <Text style={styles.availabilityText}>
+                {isAvailable ? '신청 가능' : '신청 불가'}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.tierBenefitDescription}>
+            {benefit.tiers[tier].description}
+          </Text>
+          <View style={styles.usageInfo}>
+            <Text style={styles.usageText}>
+              사용: {usedCount} / {maxCount}회
+            </Text>
+            <Text style={[styles.remainingText, { color: tierInfo.color }]}>
+              남은 횟수: {remainingCount}회
+            </Text>
+          </View>
+          {isAvailable && (
+            <TouchableOpacity
+              style={[styles.applyButton, { backgroundColor: tierInfo.color }]}
+              onPress={onPress}
+            >
+              <Text style={styles.applyButtonText}>신청하기</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+});
+
 const BenefitsScreen = ({ navigation }) => {
   const { userNFTs } = useNFTContext();
   const route = useRoute();
@@ -291,107 +344,23 @@ const BenefitsScreen = ({ navigation }) => {
     </View>
   ), [selectedTier]);
 
-  const renderBenefitItem = useCallback(({ item: benefit, key }) => (
-    <View style={styles.benefitCard}>
-      <View style={styles.benefitHeader}>
-        <View style={styles.benefitIconContainer}>
-          <Ionicons name={benefit.icon} size={24} color={COLORS.primary} />
-        </View>
-        <View style={styles.benefitTitleContainer}>
-          <Text style={styles.benefitTitle}>{benefit.title}</Text>
-          <Text style={styles.benefitSubtitle}>{benefit.description}</Text>
-        </View>
-      </View>
-
-      <View style={styles.tierBenefits}>
-        {Object.entries(TIERS).map(([tier, tierInfo]) => {
-          if (!benefit.tiers || !benefit.tiers[tier]) return null;
-          
-          const isAvailable = isBenefitAvailable(benefit, tier);
-          const usedCount = getBenefitUsageCount(benefit.id, tier);
-          const maxCount = benefit.tiers[tier].count || 0;
-          const remainingCount = maxCount - usedCount;
-
-          if (selectedTier !== 'all' && selectedTier !== tier) return null;
-
-          return (
-            <View 
-              key={tier}
-              style={[
-                styles.tierBenefit,
-                { borderColor: tierInfo.color },
-                isAvailable && { backgroundColor: tierInfo.color + '10' }
-              ]}
-            >
-              <View style={styles.tierBenefitHeader}>
-                <View style={[styles.tierBadge, { backgroundColor: tierInfo.color }]}>
-                  <Text style={styles.tierBadgeText}>{tierInfo.displayName}</Text>
-                </View>
-                {isAvailable && (
-                  <View style={[styles.availableBadge, { backgroundColor: tierInfo.color }]}>
-                    <Text style={styles.availableText}>사용 가능</Text>
-                  </View>
-                )}
-              </View>
-
-              <Text style={styles.benefitDescription}>
-                {benefit.tiers[tier].description}
-              </Text>
-              
-              {(benefit.id === 'fansign' || benefit.id === 'concert') && (
-                <View style={styles.usageContainer}>
-                  <View style={styles.usageProgress}>
-                    <View 
-                      style={[
-                        styles.usageProgressBar,
-                        { 
-                          width: `${(usedCount / maxCount) * 100}%`,
-                          backgroundColor: tierInfo.color
-                        }
-                      ]} 
-                    />
-                  </View>
-                  <View style={styles.usageInfo}>
-                    <Text style={styles.usageText}>
-                      사용: {usedCount} / {maxCount}회
-                    </Text>
-                    <Text style={[styles.remainingText, { color: tierInfo.color }]}>
-                      남은 횟수: {remainingCount}회
-                    </Text>
-                  </View>
-                </View>
-              )}
-              
-              {/* 현재 티어에서만 신청하기 버튼 표시 */}
-              {userHighestTier === tier && (
-                <TouchableOpacity
-                  style={[
-                    styles.applyButton, 
-                    { backgroundColor: isAvailable ? tierInfo.color : '#ccc' }
-                  ]}
-                  onPress={() => handleApplyBenefit(benefit, tier)}
-                  disabled={!isAvailable}
-                >
-                  <Text style={styles.applyButtonText}>
-                    {isAvailable ? '신청하기' : '신청 불가'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              
-              {/* 현재 티어가 아닌 경우 다른 메시지 표시 */}
-              {userHighestTier !== tier && (
-                <View style={[styles.applyButton, { backgroundColor: '#f0f0f0' }]}>
-                  <Text style={[styles.applyButtonText, { color: '#666' }]}>
-                    {tierOrder.indexOf(tier) < tierOrder.indexOf(userHighestTier) ? '상위 티어 필요' : '하위 티어 혜택'}
-                  </Text>
-                </View>
-              )}
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  ), [selectedTier, userNFTs, benefitUsage, userHighestTier]);
+  const renderItem = useCallback(({ item: benefit }) => {
+    const tier = selectedTier === 'all' ? userHighestTier : selectedTier;
+    const isAvailable = isBenefitAvailable(benefit, tier);
+    const usedCount = getBenefitUsageCount(benefit.id, tier);
+    const maxCount = benefit.tiers[tier].count || 0;
+    
+    return (
+      <BenefitItem
+        benefit={benefit}
+        tier={tier}
+        isAvailable={isAvailable}
+        onPress={() => handleApplyBenefit(benefit, tier)}
+        usedCount={usedCount}
+        maxCount={maxCount}
+      />
+    );
+  }, [selectedTier, userHighestTier, getBenefitUsageCount]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -406,18 +375,22 @@ const BenefitsScreen = ({ navigation }) => {
         <View style={styles.placeholder} />
       </View>
       
-      <ScrollView style={styles.content}>
+      <View style={styles.content}>
         {renderCurrentTierInfo()}
         {renderTierFilter()}
         
-        <View style={styles.benefitsContainer}>
-          {benefits.map((benefit, index) => (
-            <View key={benefit.id || `benefit-${index}`}>
-              {renderBenefitItem({ item: benefit })}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+        <FlatList
+          data={benefits}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.benefitsContainer}
+          showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          windowSize={5}
+          initialNumToRender={3}
+        />
+      </View>
       
       <Modal
         visible={showApplyModal}
@@ -599,7 +572,7 @@ const styles = StyleSheet.create({
   tierBenefits: {
     marginTop: 12,
   },
-  tierBenefit: {
+  tierBenefitCard: {
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
@@ -611,34 +584,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  availableBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  availableText: {
-    color: 'white',
-    fontSize: 12,
+  tierBenefitTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
   },
-  benefitDescription: {
+  tierBenefitDescription: {
     fontSize: 14,
     color: '#666',
     marginBottom: 12,
     lineHeight: 20,
   },
-  usageContainer: {
-    marginBottom: 12,
+  availabilityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  usageProgress: {
-    height: 4,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 2,
-    marginBottom: 8,
-  },
-  usageProgressBar: {
-    height: '100%',
-    borderRadius: 2,
+  availabilityText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   usageInfo: {
     flexDirection: 'row',

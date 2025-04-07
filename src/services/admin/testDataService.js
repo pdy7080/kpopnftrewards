@@ -142,7 +142,7 @@ const createNFT = (artistId, eventIndex, tier = 'fan', memberIndex = 0) => {
     }
     
     // 티어별 구매 순번 범위 (Fan 티어만 사용)
-    const purchaseOrderRange = { min: 1001, max: 5000 };
+    const purchaseOrderRange = { min: 1, max: 5000 };
     
     // 구매 순번 생성
     const initialSales = Math.floor(
