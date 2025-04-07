@@ -16,7 +16,8 @@
       "channel": "demo",
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease -Dorg.gradle.java.home=/usr/lib/jvm/java-11"
+        "image": "ubuntu-22.04-jdk-11-ndk-r21e",
+        "gradleCommand": ":app:assembleRelease"
       }
     },
     "production": {
