@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useNFTContext } from '../contexts/NFTContext';
 import { TEST_QR_CODES } from '../constants/testData';
 import { ARTISTS } from '../constants/artists';
-import { TIERS } from '../constants/tiers';
 import { ROUTES } from '../constants/navigation';
 
 // 화면의 너비와 높이를 가져옵니다.
@@ -99,18 +98,18 @@ const QRScanScreen = () => {
             <TouchableOpacity
               key={qr.id}
               style={[
-                styles.qrButton,
-                !isCurrentArtist && styles.disabledButton
+                styles.qrCard,
+                isCurrentArtist && styles.selectedCard
               ]}
               onPress={() => handleTestQRSelect(qr.data)}
-              disabled={!isCurrentArtist || isProcessing}
+              disabled={isProcessing || !isCurrentArtist}
             >
-              <Text style={styles.qrButtonText}>
-                {getArtistName(qrData.artistId)} - {getEventName(qrData.eventId)}
-              </Text>
-              <Text style={styles.qrButtonSubtext}>
-                팬 티어 NFT
-              </Text>
+              <View style={styles.qrCardContent}>
+                <Text style={styles.qrTitle}>{getEventName(qrData.eventId)}</Text>
+                <Text style={styles.qrArtist}>{getArtistName(qrData.artistId)}</Text>
+                <Text style={styles.qrDate}>{qrData.date || '날짜 정보 없음'}</Text>
+                <Text style={styles.qrLocation}>{qrData.location || '장소 정보 없음'}</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -122,49 +121,59 @@ const QRScanScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000',
     padding: 20,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
+    color: '#fff',
+    marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#ccc',
     marginBottom: 20,
     textAlign: 'center',
   },
   qrList: {
     flex: 1,
   },
-  qrButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+  qrCard: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  disabledButton: {
-    backgroundColor: '#ccc',
+  selectedCard: {
+    borderColor: '#FFD700',
+    backgroundColor: 'rgba(255,215,0,0.1)',
   },
-  qrButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  qrCardContent: {
+    alignItems: 'center',
+  },
+  qrTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-  },
-  qrButtonSubtext: {
     color: '#fff',
-    fontSize: 14,
-    marginTop: 5,
+    marginBottom: 8,
   },
-  artistImage: {
-    width: '100%',
-    height: CARD_HEIGHT * 0.7, // 이미지 높이를 더 크게 설정
-    resizeMode: 'cover',
-    marginBottom: 10,
-    borderRadius: 10, // 둥근 모서리 추가
+  qrArtist: {
+    fontSize: 16,
+    color: '#ccc',
+    marginBottom: 4,
+  },
+  qrDate: {
+    fontSize: 14,
+    color: '#aaa',
+    marginBottom: 4,
+  },
+  qrLocation: {
+    fontSize: 14,
+    color: '#aaa',
   },
 });
 
