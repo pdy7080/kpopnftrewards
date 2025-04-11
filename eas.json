@@ -6,7 +6,11 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -14,10 +18,8 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease",
         "env": {
-          "ANDROID_JVM_TARGET": "11",
-          "ANDROID_NDK_HOME": "/opt/android-ndk"
-        },
-        "image": "latest"
+          "ANDROID_JVM_TARGET": "17"
+        }
       }
     },
     "demo": {
