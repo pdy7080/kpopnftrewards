@@ -105,6 +105,10 @@ const ArtistSelectionScreen = ({ navigation }) => {
             <Text style={styles.artistDescription}>{artist.description}</Text>
           </View>
         </TouchableOpacity>
+        <View style={styles.sloganContainer}>
+          <Text style={styles.sloganText}>{artist.description}</Text>
+          <Text style={styles.artistName}>{artist.name}</Text>
+        </View>
       </Animated.View>
     );
   }, [selectedArtistId, handleSelectArtist, scrollX]);
@@ -169,14 +173,16 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: COLORS.primary,
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#fff',
+    textAlign: 'center',
   },
   flatListContent: {
     paddingHorizontal: (width - CARD_WIDTH) / 2,
@@ -208,8 +214,10 @@ const styles = StyleSheet.create({
   },
   artistImage: {
     width: '100%',
-    height: CARD_HEIGHT * 0.5,
+    height: 350,
+    resizeMode: 'cover',
     marginBottom: 10,
+    borderRadius: 10,
   },
   artistInfo: {
     padding: 16,
@@ -220,6 +228,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 8,
     textAlign: 'center',
+    marginTop: 10,
   },
   artistDescription: {
     fontSize: 14,
@@ -235,6 +244,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   startButtonDisabled: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -243,6 +257,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  sloganContainer: {
+    padding: 10,
+    alignItems: 'center',
+  },
+  sloganText: {
+    fontSize: 16,
+    color: '#fff',
+    fontStyle: 'italic',
   },
 });
 

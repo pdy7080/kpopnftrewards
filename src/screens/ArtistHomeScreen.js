@@ -229,7 +229,7 @@ const ArtistHomeScreen = ({ navigation, route }) => {
         <Image 
           source={selectedArtist?.groupImage}
           style={styles.artistImage}
-          resizeMode="cover"
+          resizeMode="contain"
         />
 
         <View style={styles.menuGrid}>
@@ -330,9 +330,11 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   artistImage: {
-    width: width,
-    height: width * 0.6,
-    marginBottom: 24,
+    width: '100%',
+    height: 300,
+    resizeMode: 'contain',
+    marginBottom: 10,
+    borderRadius: 10,
   },
   menuGrid: {
     flexDirection: 'row',

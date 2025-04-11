@@ -1,11 +1,16 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useNFTContext } from '../contexts/NFTContext';
 import { TEST_QR_CODES } from '../constants/testData';
 import { ARTISTS } from '../constants/artists';
 import { TIERS } from '../constants/tiers';
 import { ROUTES } from '../constants/navigation';
+
+// 화면의 너비와 높이를 가져옵니다.
+const { width, height } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.8;
+const CARD_HEIGHT = height * 0.5; // 적절한 높이로 설정
 
 const QRScanScreen = () => {
   const navigation = useNavigation();
@@ -153,6 +158,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     marginTop: 5,
+  },
+  artistImage: {
+    width: '100%',
+    height: CARD_HEIGHT * 0.7, // 이미지 높이를 더 크게 설정
+    resizeMode: 'cover',
+    marginBottom: 10,
+    borderRadius: 10, // 둥근 모서리 추가
   },
 });
 
