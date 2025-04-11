@@ -53,7 +53,11 @@ const NFTAcquisitionSuccessScreen = ({ navigation, route }) => {
         </Animated.Text>
         
         <Animated.View style={[styles.nftContainer, { transform: [{ scale: scaleAnim }] }]}>
-          <NFTCard nft={nft} size="large" />
+          <NFTCard 
+            nft={nft} 
+            size="large" 
+            style={styles.nftCard}
+          />
         </Animated.View>
         
         <Animated.View style={[styles.infoContainer, { opacity: opacityAnim }]}>
@@ -115,6 +119,13 @@ const styles = StyleSheet.create({
   },
   nftContainer: {
     marginBottom: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  nftCard: {
+    width: 200,
+    height: 280,
+    marginHorizontal: 'auto',
   },
   infoContainer: {
     backgroundColor: 'white',

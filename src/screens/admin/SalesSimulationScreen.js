@@ -254,7 +254,7 @@ const SalesSimulationScreen = ({ navigation, route }) => {
     if (filteredNFTs.length > 0 && !selectedNFT) {
       const initialNFT = filteredNFTs[0];
       setSelectedNFT(initialNFT);
-      setSalesInput(initialNFT.currentSales?.toString() || '0');
+      setSalesInput(initialNFT.initialSales?.toString() || '0');
       pointsAnim.setValue(initialNFT.currentPoints || 0);
     }
     setIsLoading(false);
@@ -534,7 +534,7 @@ const SalesSimulationScreen = ({ navigation, route }) => {
                 style={styles.nftSelectItem}
                 onPress={() => {
                   setSelectedNFT(item);
-                  setSalesInput(item.currentSales?.toString() || '0');
+                  setSalesInput(item.initialSales?.toString() || '0');
                   setShowNFTSelector(false);
                 }}
               >
@@ -746,6 +746,62 @@ const SalesSimulationScreen = ({ navigation, route }) => {
               result={simulationResult}
               tierData={tierComparisonData}
             />
+            
+            <View style={styles.pointsHistoryContainer}>
+              <Text style={styles.sectionTitle}>포인트 변경 내역</Text>
+              
+              <View style={styles.pointsHistoryCard}>
+                <View style={styles.pointsHistoryRow}>
+                  <Text style={styles.pointsHistoryLabel}>구매 순번:</Text>
+                  <Text style={styles.pointsHistoryValue}>#{selectedNFT.initialSales}</Text>
+                </View>
+                
+                <View style={styles.pointsHistoryRow}>
+                  <Text style={styles.pointsHistoryLabel}>초기 포인트:</Text>
+                  <Text style={styles.pointsHistoryValue}>{selectedNFT.initialPoints.toFixed(1)} P</Text>
+                </View>
+                
+                <View style={styles.pointsHistoryRow}>
+                  <Text style={styles.pointsHistoryLabel}>현재 판매량:</Text>
+                  <Text style={styles.pointsHistoryValue}>{selectedNFT.currentSales.toLocaleString()}개</Text>
+                </View>
+                
+                <View style={styles.pointsHistoryRow}>
+                  <Text style={styles.pointsHistoryLabel}>현재 포인트:</Text>
+                  <Text style={styles.pointsHistoryValue}>{selectedNFT.currentPoints.toFixed(1)} P</Text>
+                </View>
+                
+                {simulationResult && (
+                  <>
+                    <View style={styles.pointsHistoryDivider} />
+                    
+                    <View style={styles.pointsHistoryRow}>
+                      <Text style={styles.pointsHistoryLabel}>시뮬레이션 판매량:</Text>
+                      <Text style={styles.pointsHistoryValue}>{simulationResult.newSales.toLocaleString()}개</Text>
+                    </View>
+                    
+                    <View style={styles.pointsHistoryRow}>
+                      <Text style={styles.pointsHistoryLabel}>시뮬레이션 포인트:</Text>
+                      <Text style={styles.pointsHistoryValue}>{simulationResult.newPoints.toFixed(1)} P</Text>
+                    </View>
+                    
+                    <View style={styles.pointsHistoryRow}>
+                      <Text style={styles.pointsHistoryLabel}>포인트 증가:</Text>
+                      <Text style={[styles.pointsHistoryValue, { color: COLORS.success }]}>
+                        +{simulationResult.pointsIncrease.toFixed(1)} P
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.pointsHistoryRow}>
+                      <Text style={styles.pointsHistoryLabel}>성장률:</Text>
+                      <Text style={[styles.pointsHistoryValue, { color: COLORS.success }]}>
+                        {simulationResult.growthRate}%
+                      </Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -1092,6 +1148,41 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  pointsHistoryContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  pointsHistoryCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    marginTop: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  pointsHistoryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  pointsHistoryLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  pointsHistoryValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  pointsHistoryDivider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 10,
   },
 });
 

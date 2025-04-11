@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Image, StyleSheet, View, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Image, StyleSheet, View, Text, ActivityIndicator } from 'react-native';
 import { COLORS } from '../../constants/colors';
 
 export const ImageWithFallback = ({
@@ -8,10 +8,17 @@ export const ImageWithFallback = ({
   style,
   resizeMode = 'cover',
   onError,
+  onLoad,
   ...props
 }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 컴포넌트 마운트 시 로딩 상태 초기화
+  useEffect(() => {
+    setIsLoading(true);
+    setHasError(false);
+  }, [source]);
   
   const handleError = (error) => {
     setHasError(true);
@@ -23,6 +30,9 @@ export const ImageWithFallback = ({
   
   const handleLoad = () => {
     setIsLoading(false);
+    if (onLoad) {
+      onLoad();
+    }
   };
   
   if (hasError) {
@@ -54,7 +64,7 @@ export const ImageWithFallback = ({
       />
       {isLoading && (
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>로딩 중...</Text>
+          <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
       )}
     </View>
@@ -78,11 +88,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.1)',
-  },
-  loadingText: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   errorContainer: {
     justifyContent: 'center',

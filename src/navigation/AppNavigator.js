@@ -13,7 +13,7 @@ import NFTDetailScreen from '../screens/NFTDetailScreen';
 import NFTDetailsScreen from '../screens/NFTDetailsScreen';
 import NFTCollectionScreen from '../screens/NFTCollectionScreen';
 import NFTFusionScreen from '../screens/NFTFusionScreen';
-import { QRScanScreen } from '../screens/QRScanScreen';
+import QRScanScreen from '../screens/QRScanScreen';
 import NFTAcquisitionSuccessScreen from '../screens/NFTAcquisitionSuccessScreen';
 import BenefitsScreen from '../screens/BenefitsScreen';
 import FansignApplicationScreen from '../screens/FansignApplicationScreen';

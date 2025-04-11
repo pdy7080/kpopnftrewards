@@ -3,9 +3,27 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateArtistTestData, generateAllArtistsTestData } from '../services/admin/testDataService';
 import { ARTISTS } from '../constants/artists';
-import { MEMBER_IMAGES } from '../constants/memberImages';
+import { TIERS } from '../constants/tiers';
+import { getTierFrame } from '../utils/imageUtils';
 
 const NFTContext = createContext();
+
+export const useNFT = () => {
+  const context = useContext(NFTContext);
+  if (!context) {
+    throw new Error('useNFT must be used within an NFTProvider');
+  }
+  return context;
+};
+
+// 이전 코드와의 호환성을 위해 useNFTContext도 유지
+export const useNFTContext = () => {
+  const context = useContext(NFTContext);
+  if (!context) {
+    throw new Error('useNFTContext must be used within a NFTProvider');
+  }
+  return context;
+};
 
 export const NFTProvider = ({ children }) => {
   const [userNFTs, setUserNFTs] = useState([]);
@@ -18,21 +36,17 @@ export const NFTProvider = ({ children }) => {
   const userId = 'user123'; // 테스트용 고정 사용자 ID
 
   // NFT 이미지 가져오기 함수
-  const getNFTImage = useCallback((artistId, memberId) => {
+  const getNFTImage = useCallback((artistId) => {
     try {
-      const artistImages = MEMBER_IMAGES[artistId];
-      if (!artistImages) {
-        console.warn('아티스트 이미지를 찾을 수 없음:', artistId);
+      // 아티스트 정보 가져오기
+      const artist = ARTISTS[artistId];
+      if (!artist) {
+        console.warn('아티스트를 찾을 수 없음:', artistId);
         return require('../assets/images/placeholder.png');
       }
-
-      const memberImage = artistImages[memberId];
-      if (!memberImage) {
-        console.warn('멤버 이미지를 찾을 수 없음:', memberId);
-        return artistImages.group || require('../assets/images/placeholder.png');
-      }
-
-      return memberImage;
+      
+      // 아티스트 그룹 이미지 반환
+      return artist.groupImage;
     } catch (error) {
       console.error('이미지 로드 오류:', error);
       return require('../assets/images/placeholder.png');
@@ -56,16 +70,11 @@ export const NFTProvider = ({ children }) => {
       const storedData = await AsyncStorage.getItem(`user_nfts_${userId}`);
       if (storedData) {
         const parsedData = JSON.parse(storedData);
-        // 이미지 정보 추가
-        const nftsWithImages = parsedData.map(nft => ({
-          ...nft,
-          image: nft.imageUri || getNFTImage(nft.artistId, nft.memberId)
-        }));
-        setUserNFTs(nftsWithImages);
+        setUserNFTs(parsedData);
         
         // 선택된 아티스트의 NFT만 필터링
         if (selectedArtistId) {
-          const filteredNFTs = nftsWithImages.filter(nft => nft.artistId === selectedArtistId);
+          const filteredNFTs = parsedData.filter(nft => nft.artistId === selectedArtistId);
           setArtistNFTs(filteredNFTs);
         }
       } else {
@@ -77,7 +86,7 @@ export const NFTProvider = ({ children }) => {
       console.error('NFT 데이터 동기화 오류:', error);
       return false;
     }
-  }, [userId, selectedArtistId, getNFTImage]);
+  }, [userId, selectedArtistId]);
 
   // 선택된 아티스트 변경 시 NFT 필터링
   useEffect(() => {
@@ -141,18 +150,18 @@ export const NFTProvider = ({ children }) => {
       artists.forEach(artistId => {
         for (let i = 0; i < 3; i++) {
           const nft = {
-            id: `nft_${artistId}_${Date.now()}_${i}`,
+            id: `nft_${artistId}_fan_${Date.now()}_${i}`,
             artistId,
-            name: `${artistId.toUpperCase()} FAN NFT #${i + 1}`,
+            name: `${ARTISTS[artistId].name} 팬 NFT #${i + 1}`,
             tier: 'fan',
-            image: require('../assets/images/placeholder.png'),
+            image: ARTISTS[artistId].groupImage,
             currentPoints: 10.0,
             initialPoints: 10.0,
             initialSales: 1000,
             currentSales: 1000,
             createdAt: new Date().toISOString(),
             canFuse: true,
-            description: `${artistId.toUpperCase()} FAN 티어 NFT입니다.`
+            description: `${ARTISTS[artistId].name}의 팬 티어 NFT입니다.`
           };
           testNFTs.push(nft);
         }
@@ -167,6 +176,67 @@ export const NFTProvider = ({ children }) => {
     }
   }, [resetNFTData, updateNFTData]);
 
+  // QR 코드 데이터로부터 NFT 생성 함수
+  const createNFT = useCallback(async (qrData) => {
+    try {
+      const { artistId, eventId } = qrData;
+      
+      // 아티스트 정보 가져오기
+      const artist = ARTISTS[artistId];
+      if (!artist) {
+        throw new Error('유효하지 않은 아티스트입니다.');
+      }
+      
+      // 이벤트 정보 가져오기
+      const eventName = eventId === 'event1' ? '2025 월드투어' : 
+                        eventId === 'event2' ? '단독 콘서트' : 
+                        eventId === 'event3' ? '전국투어' : '이벤트';
+      
+      // 티어 정보 가져오기 (항상 'fan' 티어 사용)
+      const tierInfo = TIERS['fan'];
+      
+      // 랜덤 판매량 생성
+      const initialSales = Math.floor(Math.random() * 1000) + 500;
+      const currentSales = initialSales + Math.floor(Math.random() * 500);
+      
+      // 포인트 계산
+      const basePoints = tierInfo.initialPoints || 10.0;
+      const currentPoints = basePoints + (currentSales - initialSales) * 0.01;
+      
+      // NFT 객체 생성
+      const nft = {
+        id: `nft_${artistId}_fan_${Date.now()}`,
+        artistId,
+        name: `${artist.name} ${eventName} 기념 NFT`,
+        tier: 'fan',
+        image: artist.groupImage,
+        frameImage: getTierFrame('fan'),
+        currentPoints: Number(currentPoints.toFixed(2)),
+        initialPoints: basePoints,
+        initialSales,
+        currentSales,
+        createdAt: new Date().toISOString(),
+        canFuse: true,
+        description: `${artist.name}의 ${eventName}을 기념하는 팬 티어 NFT입니다.`
+      };
+      
+      // 기존 NFT 목록에 추가
+      const currentNFTs = [...userNFTs, nft];
+      await updateNFTData(currentNFTs);
+      
+      return {
+        success: true,
+        nft
+      };
+    } catch (error) {
+      console.error('NFT 생성 오류:', error);
+      return {
+        success: false,
+        error: error.message || 'NFT 생성 중 오류가 발생했습니다.'
+      };
+    }
+  }, [userNFTs, updateNFTData]);
+
   const value = {
     userNFTs,
     artistNFTs,
@@ -177,7 +247,9 @@ export const NFTProvider = ({ children }) => {
     syncNFTData,
     resetNFTData,
     updateNFTData,
-    getNFTImage
+    getNFTImage,
+    createNFT,
+    nfts: userNFTs
   };
 
   return (
@@ -185,12 +257,4 @@ export const NFTProvider = ({ children }) => {
       {children}
     </NFTContext.Provider>
   );
-};
-
-export const useNFTContext = () => {
-  const context = useContext(NFTContext);
-  if (!context) {
-    throw new Error('useNFTContext must be used within a NFTProvider');
-  }
-  return context;
 };

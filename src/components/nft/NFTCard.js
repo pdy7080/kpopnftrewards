@@ -45,7 +45,7 @@ const NFTCard = ({
   };
   
   // 멤버 이미지 가져오기
-  const getMemberImage = () => {
+  const getMemberImage = useMemo(() => {
     try {
       // NFT 객체에 image 속성이 있으면 그것을 사용
       if (nft.image) {
@@ -80,11 +80,17 @@ const NFTCard = ({
       console.error('멤버 이미지 로드 오류:', error, nft);
       return require('../../assets/images/placeholder.png');
     }
-  };
+  }, [nft.image, nft.imagePath, nft.artistId, nft.memberId]);
   
   // 프레임 이미지 가져오기
   const getFrameImage = useMemo(() => {
     try {
+      // NFT 객체에 frameImage 속성이 있으면 그것을 사용
+      if (nft.frameImage) {
+        return nft.frameImage;
+      }
+      
+      // 티어별 프레임 이미지 반환
       switch(nft.tier) {
         case 'founders': return require('../../assets/frames/founders.png');
         case 'earlybird': return require('../../assets/frames/earlybird.png');
@@ -96,7 +102,7 @@ const NFTCard = ({
       console.error('프레임 이미지 로드 오류:', error, nft);
       return require('../../assets/frames/fan.png');
     }
-  }, [nft.tier]);
+  }, [nft.frameImage, nft.tier]);
   
   // 선택 처리
   const handlePress = () => {
@@ -125,7 +131,7 @@ const NFTCard = ({
     >
       {/* 프레임 */}
       <Image
-        source={getFrameImage()}
+        source={getFrameImage}
         style={[styles.frame, cardSize]}
         resizeMode="cover"
       />
@@ -139,7 +145,7 @@ const NFTCard = ({
       
       {/* 멤버/아티스트 이미지 */}
       <ImageWithFallback
-        source={getMemberImage()}
+        source={getMemberImage}
         style={[
           styles.memberImage,
           hasImageError && styles.errorImage
@@ -186,13 +192,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: '100%',
+    zIndex: 2,
   },
   memberImage: {
-    width: '75%',
-    height: '75%',
+    width: '85%',
+    height: '85%',
     alignSelf: 'center',
-    marginTop: '12.5%',
+    marginTop: '7.5%',
     borderRadius: 8,
+    zIndex: 1,
   },
   errorImage: {
     backgroundColor: '#f0f0f0',
@@ -207,7 +215,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10,
+    zIndex: 3,
   },
   infoContainer: {
     position: 'absolute',
@@ -219,6 +227,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    zIndex: 3,
   },
   tierName: {
     color: 'white',
@@ -242,6 +251,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: COLORS.primary,
     borderRadius: 10,
+    zIndex: 4,
   },
   checkmarkBadge: {
     width: 32,
