@@ -14,8 +14,10 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease",
         "env": {
-          "ANDROID_JVM_TARGET": "11"
-        }
+          "ANDROID_JVM_TARGET": "11",
+          "ANDROID_NDK_HOME": "/opt/android-ndk"
+        },
+        "image": "latest"
       }
     },
     "demo": {
