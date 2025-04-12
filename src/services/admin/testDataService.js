@@ -188,10 +188,16 @@ const createNFT = (artistId, eventIndex, tier = 'fan', memberIndex = 0) => {
     let image;
     if (memberId === 'group') {
       // 그룹 이미지
-      image = require(`../../../assets/artists/${artistId}/group.jpg`);
+      image = ARTIST_IMAGES[artistId][0];  // 첫 번째 그룹 이미지 사용
     } else {
       // 멤버 이미지
-      image = require(`../../../assets/artists/${artistId}/members/${memberId}.jpg`);
+      const memberImages = MEMBER_IMAGES[artistId];
+      if (memberImages && memberImages[memberId]) {
+        image = memberImages[memberId];
+      } else {
+        // 기본 이미지 사용
+        image = ARTIST_IMAGES[artistId][0];
+      }
     }
     
     return {
