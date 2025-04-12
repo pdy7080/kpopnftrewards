@@ -88,6 +88,36 @@ const NFTDetailsScreen = () => {
             <Text style={styles.descriptionText}>{nft.description || '설명이 없습니다.'}</Text>
           </View>
 
+          <View style={styles.purchaseHistoryContainer}>
+            <Text style={styles.purchaseHistoryTitle}>구매 내역</Text>
+            {nft.purchaseHistory ? (
+              <View style={styles.purchaseHistoryContent}>
+                <View style={styles.purchaseHistoryItem}>
+                  <Text style={styles.purchaseHistoryLabel}>구매일</Text>
+                  <Text style={styles.purchaseHistoryValue}>
+                    {new Date(nft.purchaseHistory.purchaseDate).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.purchaseHistoryItem}>
+                  <Text style={styles.purchaseHistoryLabel}>구매 가격</Text>
+                  <Text style={styles.purchaseHistoryValue}>
+                    {nft.purchaseHistory.price.toLocaleString()}원
+                  </Text>
+                </View>
+                {nft.purchaseHistory.groupEvent && (
+                  <View style={styles.purchaseHistoryItem}>
+                    <Text style={styles.purchaseHistoryLabel}>그룹 이벤트</Text>
+                    <Text style={styles.purchaseHistoryValue}>
+                      {nft.purchaseHistory.groupEvent}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <Text style={styles.noPurchaseHistory}>구매 내역이 없습니다.</Text>
+            )}
+          </View>
+
           <View style={styles.benefitsContainer}>
             <Text style={styles.benefitsTitle}>티어 혜택</Text>
             <View style={styles.benefitsList}>
@@ -246,6 +276,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     lineHeight: 20,
+  },
+  purchaseHistoryContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  purchaseHistoryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  purchaseHistoryContent: {
+    gap: 8,
+  },
+  purchaseHistoryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  purchaseHistoryLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  purchaseHistoryValue: {
+    fontSize: 14,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  noPurchaseHistory: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    paddingVertical: 8,
   },
   benefitsContainer: {
     backgroundColor: COLORS.white,

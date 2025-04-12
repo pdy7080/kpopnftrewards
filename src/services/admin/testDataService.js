@@ -6,6 +6,7 @@ import { calculatePoints, getTierByPurchaseOrder } from '../pointsCalculator';
 import { generateNFTDetails } from '../../utils/nftGenerator';
 import { MEMBER_IMAGES } from '../../constants/memberImages';
 import { NFT_EVENTS } from '../../constants/nftThemes';
+import { getUserNFTs } from '../nftService';
 
 // 테스트 데이터 생성을 위한 상수 정의
 const EVENTS = {
@@ -183,17 +184,28 @@ const createNFT = (artistId, eventIndex, tier = 'fan', memberIndex = 0) => {
     // NFT ID 생성
     const nftId = `${artistId}_${event.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
     
+    // 이미지 경로 설정
+    let image;
+    if (memberId === 'group') {
+      // 그룹 이미지
+      image = require(`../../../assets/artists/${artistId}/group.jpg`);
+    } else {
+      // 멤버 이미지
+      image = require(`../../../assets/artists/${artistId}/members/${memberId}.jpg`);
+    }
+    
     return {
       id: nftId,
       artistId,
       memberId,
-      name: `${artist.name} ${memberId === 'bibi' ? '' : ARTISTS[artistId].members.find(m => m.id === memberId)?.name || ''} - ${event}`,
+      name: `${artist.name} ${memberId === 'group' ? '' : ARTISTS[artistId].members.find(m => m.id === memberId)?.name || ''} - ${event}`,
       description,
       tier,
       initialPoints: basePoints,
       currentPoints,
       initialSales,
       currentSales,
+      image,
       createdAt: new Date().toISOString(),
       canFuse: true,
       fusionCount: 0  // 결합 횟수 추적을 위한 필드 추가
@@ -323,39 +335,48 @@ export const generateArtistTestData = async (artistId, userId = 'user123') => {
     }
     
     // 기존 NFT 데이터 가져오기
-    const existingNFTsJson = await AsyncStorage.getItem(`user_nfts_${userId}`);
-    let existingNFTs = [];
-    if (existingNFTsJson) {
-      try {
-        existingNFTs = JSON.parse(existingNFTsJson);
-        // 해당 아티스트의 NFT 제거
-        existingNFTs = existingNFTs.filter(nft => nft.artistId !== artistId);
-      } catch (parseError) {
-        console.error('NFT 데이터 파싱 오류:', parseError);
+    const existingNFTs = await getUserNFTs(userId);
+    
+    // 새로 생성할 NFT 배열
+    const newNFTs = [];
+    
+    // 각 티어별로 NFT 생성
+    const tiers = ['fan', 'supporter', 'earlybird', 'founders'];
+    tiers.forEach((tier, tierIndex) => {
+      // 각 이벤트별로 NFT 생성
+      for (let eventIndex = 0; eventIndex < 3; eventIndex++) {
+        // 멤버별 NFT 생성
+        const artistData = ARTIST_NFT_DATA[artistId];
+        if (artistData && artistData.members) {
+          artistData.members.forEach((memberId, memberIndex) => {
+            const nft = createNFT(artistId, eventIndex, tier, memberIndex);
+            if (nft) {
+              newNFTs.push(nft);
+            }
+          });
+          
+          // 그룹 NFT 생성 (각 티어별로 1개씩)
+          if (tierIndex === 0) { // fan 티어에만 그룹 NFT 생성
+            const groupNFT = createNFT(artistId, eventIndex, tier, 'group');
+            if (groupNFT) {
+              newNFTs.push(groupNFT);
+            }
+          }
+        }
       }
-    }
+    });
     
-    const nfts = [];
+    // 기존 NFT와 새로 생성한 NFT 합치기
+    const updatedNFTs = [...existingNFTs, ...newNFTs];
     
-    // Fan 티어 NFT만 3개 생성
-    for (let i = 0; i < 3; i++) {
-      const eventIndex = i % ARTIST_NFT_DATA[artistId].events.length;
-      const memberIndex = i % ARTIST_NFT_DATA[artistId].members.length;
-      
-      const nft = createNFT(artistId, eventIndex, 'fan', memberIndex);
-      if (nft) {
-        nfts.push(nft);
-        console.log(`Created Fan tier NFT for ${artistId} with event index ${eventIndex}`);
-      }
-    }
+    // NFT 데이터 저장
+    await AsyncStorage.setItem(NFT_STORAGE_KEY(userId), JSON.stringify(updatedNFTs));
     
-    // 새 NFT와 기존 NFT 합치기
-    const updatedNFTs = [...existingNFTs, ...nfts];
-    
-    // AsyncStorage에 저장
-    await AsyncStorage.setItem(`user_nfts_${userId}`, JSON.stringify(updatedNFTs));
-    
-    return { success: true, nfts: updatedNFTs, nftsCount: nfts.length };
+    return { 
+      success: true, 
+      message: `${artist.name}의 테스트 데이터가 생성되었습니다.`, 
+      nftsCount: newNFTs.length 
+    };
   } catch (error) {
     console.error('테스트 데이터 생성 오류:', error);
     return { success: false, error: error.message };
