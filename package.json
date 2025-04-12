@@ -1,7 +1,7 @@
 {
   "name": "kpopnftrewards",
   "main": "App.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -21,6 +21,7 @@
     "@react-navigation/native": "^7.1.4",
     "@react-navigation/stack": "^7.2.8",
     "expo": "~52.0.43",
+    "expo-barcode-scanner": "^13.0.1",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.8",
     "expo-dev-client": "~5.0.19",

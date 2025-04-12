@@ -41,7 +41,9 @@ class QRGenerator:
             'id': 'event4',
             'name': '기념굿즈구매',
             'description_template_member': '{artist_name} {event_name}을 기념하는 특별 기념주화 NFT입니다. {member_name} 멤버의 특별한 디자인이 적용되었습니다. {event_name}의 특별한 순간을 담아낸 한정판 주화입니다.',
-            'description_template_group': '{group_name} {event_name}을 기념하는 플래티넘 기념주화 NFT입니다. 그룹 전체의 특별한 디자인이 적용되었습니다. {event_name}의 특별한 순간을 담아낸 한정판 주화입니다.'
+            'description_template_group': '{group_name} {event_name}을 기념하는 플래티넘 기념주화 NFT입니다. 그룹 전체의 특별한 디자인이 적용되었습니다. {event_name}의 특별한 순간을 담아낸 한정판 주화입니다.',
+            'title_template_member': '{artist_name} {member_name} {event_name} 기념 주화 NFT',
+            'title_template_group': '{group_name} {event_name} 기념 플래티넘 주화 NFT'
         }
         
         # QR 코드 저장 디렉토리
@@ -63,9 +65,16 @@ class QRGenerator:
         else:
             if member_id:
                 member_name = artist_info['members'][member_id]
-                title = f"{artist_name} {member_name} {event_name} 기념 주화 NFT"
+                title = self.default_event['title_template_member'].format(
+                    artist_name=artist_name,
+                    member_name=member_name,
+                    event_name=event_name
+                )
             else:
-                title = f"{group_name} {event_name} 기념 플래티넘 주화 NFT"
+                title = self.default_event['title_template_group'].format(
+                    group_name=group_name,
+                    event_name=event_name
+                )
         
         # 설명 생성
         if member_id:
@@ -103,7 +112,8 @@ class QRGenerator:
                 "purchaseOrder": purchase_order,
                 "title": nft_content["title"],
                 "description": nft_content["description"],
-                "createdAt": datetime.now().isoformat()
+                "createdAt": datetime.now().isoformat(),
+                "isGroupNFT": member_id is None  # 그룹 NFT 여부를 명시적으로 표시
             }
             
             # 멤버 ID가 있는 경우에만 추가
