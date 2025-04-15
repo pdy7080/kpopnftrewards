@@ -118,6 +118,8 @@ const NFTDetailsScreen = () => {
             )}
           </View>
 
+          <Text style={styles.purchaseOrderLabel}>구매 순번: #{nft.purchaseOrder || nft.initialSales || 0}</Text>
+
           <View style={styles.benefitsContainer}>
             <Text style={styles.benefitsTitle}>티어 혜택</Text>
             <View style={styles.benefitsList}>
@@ -322,6 +324,11 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     paddingVertical: 8,
+  },
+  purchaseOrderLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
   },
   benefitsContainer: {
     backgroundColor: COLORS.white,

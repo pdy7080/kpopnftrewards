@@ -416,10 +416,12 @@ const SalesSimulationScreen = ({ navigation, route }) => {
       setSimulationResult({
         initialSales: currentSales,
         newSales,
-        initialPoints: selectedTierResult.currentPoints,
+        initialPoints: selectedTierResult.initialPoints,
         newPoints: selectedTierResult.newPoints,
         pointsIncrease: selectedTierResult.increase,
-        growthRate: selectedTierResult.growthRate
+        growthRate: selectedTierResult.growthRate,
+        milestoneCount: selectedTierResult.milestoneCount,
+        bonusPoints: selectedTierResult.bonusPoints
       });
       
       // 포인트 애니메이션
@@ -606,7 +608,7 @@ const SalesSimulationScreen = ({ navigation, route }) => {
                 </Text>
                 
                 <Text style={styles.nftSubtitle}>
-                  구매 순번: #{selectedNFT.initialSales || 0}
+                  구매 순번: #{selectedNFT.initialSales || selectedNFT.purchaseOrder || 0}
                 </Text>
                 
                 <Text style={styles.pointsText}>
@@ -753,7 +755,7 @@ const SalesSimulationScreen = ({ navigation, route }) => {
               <View style={styles.pointsHistoryCard}>
                 <View style={styles.pointsHistoryRow}>
                   <Text style={styles.pointsHistoryLabel}>구매 순번:</Text>
-                  <Text style={styles.pointsHistoryValue}>#{selectedNFT.initialSales}</Text>
+                  <Text style={styles.pointsHistoryValue}>#{selectedNFT.initialSales || selectedNFT.purchaseOrder || 0}</Text>
                 </View>
                 
                 <View style={styles.pointsHistoryRow}>

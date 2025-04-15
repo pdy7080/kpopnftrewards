@@ -2,7 +2,7 @@
   "expo": {
     "name": "KpopNftRewards",
     "slug": "KpopNftRewards",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "myapp",
@@ -17,7 +17,11 @@
       "policy": "appVersion"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dcclab.KpopNftRewards",
+      "infoPlist": {
+        "NSCameraUsageDescription": "QR 코드를 스캔하기 위해 카메라 접근 권한이 필요합니다."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +29,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.dcclab.KpopNftRewards",
-      "versionName": "1.0.1"
+      "versionName": "1.0.2",
+      "permissions": ["CAMERA"]
     },
     "web": {
       "bundler": "metro",
@@ -42,6 +47,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "QR 코드를 스캔하기 위해 카메라 접근 권한이 필요합니다."
+        }
       ]
     ],
     "experiments": {
@@ -54,6 +65,12 @@
       "eas": {
         "projectId": "709fcbf4-1766-4110-ae2a-14af3b067b0b"
       }
+    },
+    "developmentClient": {
+      "silentLaunch": true
+    },
+    "development": {
+      "developmentClient": true
     }
   }
 }

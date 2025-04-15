@@ -108,6 +108,7 @@ export const createNFTFromQRData = async (qrData) => {
       initialPoints: TIERS[tier].initialPoints,
       currentPoints,
       initialSales: purchaseOrder,
+      purchaseOrder: purchaseOrder,
       currentSales,
       createdAt: new Date().toISOString(),
       canFuse: true

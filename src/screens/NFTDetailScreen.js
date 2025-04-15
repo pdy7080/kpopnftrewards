@@ -137,6 +137,10 @@ const NFTDetailScreen = ({ route }) => {
               <Text style={styles.statValue}>{nft.currentPoints}</Text>
             </View>
             <View style={styles.statItem}>
+              <Text style={styles.statLabel}>구매 순번</Text>
+              <Text style={styles.statValue}>{nft.purchaseOrder || nft.initialSales || 0}</Text>
+            </View>
+            <View style={styles.statItem}>
               <Text style={styles.statLabel}>초기 판매량</Text>
               <Text style={styles.statValue}>{nft.initialSales}</Text>
             </View>

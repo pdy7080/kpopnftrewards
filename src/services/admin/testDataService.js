@@ -339,49 +339,31 @@ export const generateArtistTestData = async (artistId, userId = 'user123') => {
     if (!artist) {
       return { success: false, error: '유효하지 않은 아티스트 ID입니다.' };
     }
-    
     // 기존 NFT 데이터 가져오기
     const existingNFTs = await getUserNFTs(userId);
-    
     // 새로 생성할 NFT 배열
     const newNFTs = [];
-    
-    // 각 티어별로 NFT 생성
-    const tiers = ['fan', 'supporter', 'earlybird', 'founders'];
-    tiers.forEach((tier, tierIndex) => {
-      // 각 이벤트별로 NFT 생성
+    // 팬티어(fan)만, 이벤트별 3개만 생성
+    const tier = 'fan';
+    const artistData = ARTIST_NFT_DATA[artistId];
+    if (artistData && artistData.members) {
       for (let eventIndex = 0; eventIndex < 3; eventIndex++) {
-        // 멤버별 NFT 생성
-        const artistData = ARTIST_NFT_DATA[artistId];
-        if (artistData && artistData.members) {
-          artistData.members.forEach((memberId, memberIndex) => {
-            const nft = createNFT(artistId, eventIndex, tier, memberIndex);
-            if (nft) {
-              newNFTs.push(nft);
-            }
-          });
-          
-          // 그룹 NFT 생성 (각 티어별로 1개씩)
-          if (tierIndex === 0) { // fan 티어에만 그룹 NFT 생성
-            const groupNFT = createNFT(artistId, eventIndex, tier, 'group');
-            if (groupNFT) {
-              newNFTs.push(groupNFT);
-            }
-          }
+        // 멤버를 순차적으로 선택 (멤버 수가 3보다 적으면 반복)
+        const memberIndex = eventIndex % artistData.members.length;
+        const nft = createNFT(artistId, eventIndex, tier, memberIndex);
+        if (nft) {
+          newNFTs.push(nft);
         }
       }
-    });
-    
+    }
     // 기존 NFT와 새로 생성한 NFT 합치기
     const updatedNFTs = [...existingNFTs, ...newNFTs];
-    
     // NFT 데이터 저장
     await AsyncStorage.setItem(NFT_STORAGE_KEY(userId), JSON.stringify(updatedNFTs));
-    
-    return { 
-      success: true, 
-      message: `${artist.name}의 테스트 데이터가 생성되었습니다.`, 
-      nftsCount: newNFTs.length 
+    return {
+      success: true,
+      message: `${artist.name}의 팬티어 테스트 NFT 3개가 생성되었습니다.`,
+      nftsCount: newNFTs.length
     };
   } catch (error) {
     console.error('테스트 데이터 생성 오류:', error);

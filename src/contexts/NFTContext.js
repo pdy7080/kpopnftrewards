@@ -179,7 +179,7 @@ export const NFTProvider = ({ children }) => {
   // QR 코드 데이터로부터 NFT 생성 함수
   const createNFT = useCallback(async (qrData) => {
     try {
-      const { artistId, eventId } = qrData;
+      const { artistId, eventId, purchaseOrder } = qrData;
       
       // 아티스트 정보 가져오기
       const artist = ARTISTS[artistId];
@@ -195,8 +195,8 @@ export const NFTProvider = ({ children }) => {
       // 티어 정보 가져오기 (항상 'fan' 티어 사용)
       const tierInfo = TIERS['fan'];
       
-      // 랜덤 판매량 생성
-      const initialSales = Math.floor(Math.random() * 1000) + 500;
+      // 판매량 설정 (구매순번 기반)
+      const initialSales = purchaseOrder || Math.floor(Math.random() * 1000) + 500;
       const currentSales = initialSales + Math.floor(Math.random() * 500);
       
       // 포인트 계산
@@ -215,6 +215,7 @@ export const NFTProvider = ({ children }) => {
         initialPoints: basePoints,
         initialSales,
         currentSales,
+        purchaseOrder: purchaseOrder || initialSales, // 구매순번 추가
         createdAt: new Date().toISOString(),
         canFuse: true,
         description: `${artist.name}의 ${eventName}을 기념하는 팬 티어 NFT입니다.`

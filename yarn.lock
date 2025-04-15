@@ -1688,14 +1688,6 @@
   dependencies:
     "@react-native/codegen" "0.76.9"
 
-"@react-native/babel-plugin-codegen@0.79.0":
-  version "0.79.0"
-  resolved "https://registry.yarnpkg.com/@react-native/babel-plugin-codegen/-/babel-plugin-codegen-0.79.0.tgz#660eabc6e362a9bfa3e1f0bdf6fbe023858c280c"
-  integrity sha512-7IkObXF0dl5Dv1vGO5rBAB+yx26kqDntqrDvurO1ZjB11oeKiWOuDoWMnouaPZGhUbnswkYwMRLXCpYhDTG4bA==
-  dependencies:
-    "@babel/traverse" "^7.25.3"
-    "@react-native/codegen" "0.79.0"
-
 "@react-native/babel-preset@0.76.9":
   version "0.76.9"
   resolved "https://registry.yarnpkg.com/@react-native/babel-preset/-/babel-preset-0.76.9.tgz#08bc4198c67a0d07905dcc48cb4105b8d0f6ecd9"
@@ -1744,57 +1736,6 @@
     "@babel/template" "^7.25.0"
     "@react-native/babel-plugin-codegen" "0.76.9"
     babel-plugin-syntax-hermes-parser "^0.25.1"
-    babel-plugin-transform-flow-enums "^0.0.2"
-    react-refresh "^0.14.0"
-
-"@react-native/babel-preset@0.79.0":
-  version "0.79.0"
-  resolved "https://registry.yarnpkg.com/@react-native/babel-preset/-/babel-preset-0.79.0.tgz#10ef0a8b9966143b545821dbae1d4ac152fcfdcb"
-  integrity sha512-OcizKxBRxte1kZo932G4tpgDgKnDMErie0EkbVK83WaQAvnL0Dd1GWPoYjFmlKtJwh7PM2RZqTsrwqsksrmtRg==
-  dependencies:
-    "@babel/core" "^7.25.2"
-    "@babel/plugin-proposal-export-default-from" "^7.24.7"
-    "@babel/plugin-syntax-dynamic-import" "^7.8.3"
-    "@babel/plugin-syntax-export-default-from" "^7.24.7"
-    "@babel/plugin-syntax-nullish-coalescing-operator" "^7.8.3"
-    "@babel/plugin-syntax-optional-chaining" "^7.8.3"
-    "@babel/plugin-transform-arrow-functions" "^7.24.7"
-    "@babel/plugin-transform-async-generator-functions" "^7.25.4"
-    "@babel/plugin-transform-async-to-generator" "^7.24.7"
-    "@babel/plugin-transform-block-scoping" "^7.25.0"
-    "@babel/plugin-transform-class-properties" "^7.25.4"
-    "@babel/plugin-transform-classes" "^7.25.4"
-    "@babel/plugin-transform-computed-properties" "^7.24.7"
-    "@babel/plugin-transform-destructuring" "^7.24.8"
-    "@babel/plugin-transform-flow-strip-types" "^7.25.2"
-    "@babel/plugin-transform-for-of" "^7.24.7"
-    "@babel/plugin-transform-function-name" "^7.25.1"
-    "@babel/plugin-transform-literals" "^7.25.2"
-    "@babel/plugin-transform-logical-assignment-operators" "^7.24.7"
-    "@babel/plugin-transform-modules-commonjs" "^7.24.8"
-    "@babel/plugin-transform-named-capturing-groups-regex" "^7.24.7"
-    "@babel/plugin-transform-nullish-coalescing-operator" "^7.24.7"
-    "@babel/plugin-transform-numeric-separator" "^7.24.7"
-    "@babel/plugin-transform-object-rest-spread" "^7.24.7"
-    "@babel/plugin-transform-optional-catch-binding" "^7.24.7"
-    "@babel/plugin-transform-optional-chaining" "^7.24.8"
-    "@babel/plugin-transform-parameters" "^7.24.7"
-    "@babel/plugin-transform-private-methods" "^7.24.7"
-    "@babel/plugin-transform-private-property-in-object" "^7.24.7"
-    "@babel/plugin-transform-react-display-name" "^7.24.7"
-    "@babel/plugin-transform-react-jsx" "^7.25.2"
-    "@babel/plugin-transform-react-jsx-self" "^7.24.7"
-    "@babel/plugin-transform-react-jsx-source" "^7.24.7"
-    "@babel/plugin-transform-regenerator" "^7.24.7"
-    "@babel/plugin-transform-runtime" "^7.24.7"
-    "@babel/plugin-transform-shorthand-properties" "^7.24.7"
-    "@babel/plugin-transform-spread" "^7.24.7"
-    "@babel/plugin-transform-sticky-regex" "^7.24.7"
-    "@babel/plugin-transform-typescript" "^7.25.2"
-    "@babel/plugin-transform-unicode-regex" "^7.24.7"
-    "@babel/template" "^7.25.0"
-    "@react-native/babel-plugin-codegen" "0.79.0"
-    babel-plugin-syntax-hermes-parser "0.25.1"
     babel-plugin-transform-flow-enums "^0.0.2"
     react-refresh "^0.14.0"
 
@@ -1928,26 +1869,6 @@
     "@react-native/babel-preset" "0.76.9"
     hermes-parser "0.23.1"
     nullthrows "^1.1.1"
-
-"@react-native/metro-babel-transformer@0.79.0":
-  version "0.79.0"
-  resolved "https://registry.yarnpkg.com/@react-native/metro-babel-transformer/-/metro-babel-transformer-0.79.0.tgz#e23ad5aaa0310b95bef434638bac2f7c97e8106e"
-  integrity sha512-bv2y9WVmLXOZeEB6yi3Lol8nMjtYLTRY7Ws47x6MPNOG0XrXCsn/TmK704V2whq/GJsj22KMyvzkwG66DX6KSw==
-  dependencies:
-    "@babel/core" "^7.25.2"
-    "@react-native/babel-preset" "0.79.0"
-    hermes-parser "0.25.1"
-    nullthrows "^1.1.1"
-
-"@react-native/metro-config@^0.79.0":
-  version "0.79.0"
-  resolved "https://registry.yarnpkg.com/@react-native/metro-config/-/metro-config-0.79.0.tgz#f42694eded10b6cf14e0902607f02c42aaa7293f"
-  integrity sha512-MHevg80zRsyCsv8entCaa8W/dbf+ldnmrsQSllL4Qc8zJBhtXkqEHKDlY+W+qcKmsX48O6oI4PHER38sf3WO4Q==
-  dependencies:
-    "@react-native/js-polyfills" "0.79.0"
-    "@react-native/metro-babel-transformer" "0.79.0"
-    metro-config "^0.82.0"
-    metro-runtime "^0.82.0"
 
 "@react-native/normalize-colors@0.76.8":
   version "0.76.8"
@@ -3739,12 +3660,12 @@ expo-asset@~11.0.5:
     invariant "^2.2.4"
     md5-file "^3.2.3"
 
-expo-barcode-scanner@^13.0.1:
-  version "13.0.1"
-  resolved "https://registry.yarnpkg.com/expo-barcode-scanner/-/expo-barcode-scanner-13.0.1.tgz#c7218c78f9e3d27086473a9826756bbcacd7f117"
-  integrity sha512-xBGLT1An2gpAMIQRTLU3oHydKohX8r8F9/ait1Fk9Vgd0GraFZbP4IiT7nHMlaw4H6E7Muucf7vXpGV6u7d4HQ==
+expo-barcode-scanner@~12.9.2:
+  version "12.9.3"
+  resolved "https://registry.yarnpkg.com/expo-barcode-scanner/-/expo-barcode-scanner-12.9.3.tgz#b6be7975c7a347d5906255b2117eb8ea35dde275"
+  integrity sha512-I3zaKSINRMHbTc7sHIq14ug3fHkCsW4rweJF12yk0kHaympI2wxVgIo2DhzeZaYG1Ylkuj5aiKen3NuwDk1FSA==
   dependencies:
-    expo-image-loader "~4.7.0"
+    expo-image-loader "~4.6.0"
 
 expo-blur@~14.0.3:
   version "14.0.3"
@@ -3816,10 +3737,10 @@ expo-haptics@~14.0.1:
   resolved "https://registry.yarnpkg.com/expo-haptics/-/expo-haptics-14.0.1.tgz#ff4ead605e33f1917e615c9328af7ac1c34892dc"
   integrity sha512-V81FZ7xRUfqM6uSI6FA1KnZ+QpEKnISqafob/xEfcx1ymwhm4V3snuLWWFjmAz+XaZQTqlYa8z3QbqEXz7G63w==
 
-expo-image-loader@~4.7.0:
-  version "4.7.0"
-  resolved "https://registry.yarnpkg.com/expo-image-loader/-/expo-image-loader-4.7.0.tgz#d403106822de80bda12d644c82b7a3b7983c0f0b"
-  integrity sha512-cx+MxxsAMGl9AiWnQUzrkJMJH4eNOGlu7XkLGnAXSJrRoIiciGaKqzeaD326IyCTV+Z1fXvIliSgNW+DscvD8g==
+expo-image-loader@~4.6.0:
+  version "4.6.0"
+  resolved "https://registry.yarnpkg.com/expo-image-loader/-/expo-image-loader-4.6.0.tgz#ca7d4fdf53125bff2091d3a2c34a3155f10df147"
+  integrity sha512-RHQTDak7/KyhWUxikn2yNzXL7i2cs16cMp6gEAgkHOjVhoCJQoOJ0Ljrt4cKQ3IowxgCuOrAgSUzGkqs7omj8Q==
 
 expo-json-utils@~0.14.0:
   version "0.14.0"
