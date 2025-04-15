@@ -13,9 +13,7 @@
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/709fcbf4-1766-4110-ae2a-14af3b067b0b"
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.2",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.dcclab.KpopNftRewards",
