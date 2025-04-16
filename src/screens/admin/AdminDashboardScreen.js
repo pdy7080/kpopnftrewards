@@ -18,6 +18,7 @@ import { COLORS } from '../../constants/colors';
 import { ARTISTS } from '../../constants/artists';
 import { generateArtistTestData, generateAllTestData, resetAppData } from '../../services/admin/testDataService';
 import { ROUTES } from '../../constants/navigation';
+import * as Updates from 'expo-updates';
 
 const AdminDashboardScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -179,10 +180,32 @@ const AdminDashboardScreen = ({ navigation }) => {
     }
   };
   
+  const handleCheckUpdate = async () => {
+    try {
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        await Updates.fetchUpdateAsync();
+        Alert.alert('업데이트', '새로운 업데이트가 적용됩니다. 앱이 재시작됩니다.');
+        await Updates.reloadAsync();
+      } else {
+        Alert.alert('업데이트', '현재 최신 버전입니다.');
+      }
+    } catch (e) {
+      Alert.alert('오류', '업데이트 확인 중 오류가 발생했습니다.');
+    }
+  };
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>관리자 대시보드</Text>
+        <TouchableOpacity
+          style={styles.updateButton}
+          onPress={handleCheckUpdate}
+          disabled={isLoading}
+        >
+          <Text style={styles.updateButtonText}>앱 업데이트 확인</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.exitButton}
           onPress={handleGoBack}
@@ -309,6 +332,18 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: COLORS.primary,
+  },
+  updateButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginRight: 8,
+  },
+  updateButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   exitButton: {
     padding: 8,
