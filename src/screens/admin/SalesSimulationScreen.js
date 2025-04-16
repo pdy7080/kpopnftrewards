@@ -416,9 +416,9 @@ const SalesSimulationScreen = ({ navigation, route }) => {
       setSimulationResult({
         initialSales: currentSales,
         newSales,
-        initialPoints: selectedTierResult.initialPoints,
+        initialPoints: selectedNFT.initialPoints || 0,
         newPoints: selectedTierResult.newPoints,
-        pointsIncrease: selectedTierResult.increase,
+        pointsIncrease: selectedTierResult.newPoints - (selectedNFT.currentPoints || 0),
         growthRate: selectedTierResult.growthRate,
         milestoneCount: selectedTierResult.milestoneCount,
         bonusPoints: selectedTierResult.bonusPoints
